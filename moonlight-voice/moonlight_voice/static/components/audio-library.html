@@ -1,0 +1,228 @@
+<section
+  class="tabpanel page-stack"
+  id="panel-audio-library"
+  role="tabpanel"
+  aria-labelledby="tab-audio-library"
+  tabindex="0"
+  data-panel="audio-library"
+>
+  <section class="panel" aria-labelledby="default-response-title">
+    <div class="panel__header">
+      <div>
+        <h2 id="default-response-title">Default response</h2>
+        <p>
+          Used whenever no response code matches. Upload one source file;
+          Moonlight Voice creates the alternate MP3/WAV format when conversion
+          is available.
+        </p>
+      </div>
+    </div>
+    <form id="default-upload-form" class="grid grid--form">
+      <div class="form-field">
+        <label class="form-label" for="default-file">Audio file</label>
+        <div class="file-picker" data-file-picker>
+          <input
+            class="file-picker__input"
+            id="default-file"
+            type="file"
+            accept=".mp3,.wav,audio/*"
+            required
+          />
+          <label class="file-picker__dropzone" for="default-file">
+            <span data-icon="file-audio" aria-hidden="true"></span>
+            <span class="file-picker__prompt"
+              >Drop MP3/WAV or choose a file</span
+            >
+            <span class="file-picker__name" data-file-name
+              >No file selected</span
+            >
+          </label>
+        </div>
+      </div>
+      <div class="action-row">
+        <button class="button" id="default-upload" type="submit">
+          <span data-icon="upload" aria-hidden="true"></span>
+          <span class="button__label" data-default-upload-label
+            >Upload default</span
+          >
+        </button>
+        <button
+          class="button button--secondary"
+          id="default-play"
+          type="button"
+          disabled
+        >
+          <span data-icon="play" aria-hidden="true"></span>
+          <span class="button__label">Play default</span>
+        </button>
+        <button
+          class="button button--danger"
+          id="default-delete"
+          type="button"
+          disabled
+        >
+          <span data-icon="trash" aria-hidden="true"></span>
+          <span class="button__label">Delete default</span>
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel" aria-labelledby="response-library-title">
+    <div class="panel__header">
+      <div>
+        <h2 id="response-library-title">Response library</h2>
+        <p>
+          Each code stores one source clip. The service uses its active output
+          format and creates the alternate format when possible.
+        </p>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="responses-search"
+          >Search responses</label
+        >
+        <div class="search-field">
+          <span data-icon="search" aria-hidden="true"></span>
+          <input
+            class="field"
+            id="responses-search"
+            type="search"
+            placeholder="e.g. doorbell"
+          />
+        </div>
+      </div>
+    </div>
+    <form
+      id="response-upload-form"
+      class="grid grid--form response-library__form"
+    >
+      <div class="form-field">
+        <label class="form-label" for="response-code">Response code</label>
+        <input
+          class="field"
+          id="response-code"
+          required
+          placeholder="e.g. doorbell"
+        />
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="response-file">Audio file</label>
+        <div class="file-picker" data-file-picker>
+          <input
+            class="file-picker__input"
+            id="response-file"
+            type="file"
+            accept=".mp3,.wav,audio/*"
+            required
+          />
+          <label class="file-picker__dropzone" for="response-file">
+            <span data-icon="file-audio" aria-hidden="true"></span>
+            <span class="file-picker__prompt"
+              >Drop MP3/WAV or choose a file</span
+            >
+            <span class="file-picker__name" data-file-name
+              >No file selected</span
+            >
+          </label>
+        </div>
+      </div>
+      <button class="button" id="response-upload" type="submit">
+        <span data-icon="upload" aria-hidden="true"></span>
+        <span class="button__label" data-response-upload-label
+          >Upload response</span
+        >
+      </button>
+    </form>
+    <div
+      class="action-row response-library__bulk-actions"
+      id="responses-bulk-actions"
+    >
+      <span class="muted" id="responses-selection-status"
+        >Select responses to delete.</span
+      >
+      <button
+        class="button button--danger button--small"
+        id="responses-delete-selected"
+        type="button"
+        disabled
+      >
+        <span data-icon="trash" aria-hidden="true"></span>
+        <span class="button__label">Delete selected</span>
+      </button>
+    </div>
+    <div class="table-wrapper">
+      <table class="data-table" id="responses-table">
+        <thead>
+          <tr id="responses-table-head">
+            <th class="table-select" scope="col">
+              <input
+                id="responses-select-all"
+                type="checkbox"
+                aria-label="Select all responses on this page"
+              />
+            </th>
+            <th scope="col">
+              <button
+                class="sort-button"
+                type="button"
+                data-sort="code"
+                aria-label="Sort by code"
+              >
+                Code
+                <span aria-hidden="true" data-sort-indicator="code">↕</span>
+              </button>
+            </th>
+            <th scope="col">
+              <button
+                class="sort-button"
+                type="button"
+                data-sort="updated"
+                aria-label="Sort by last updated"
+              >
+                Last updated
+                <span aria-hidden="true" data-sort-indicator="updated">↕</span>
+              </button>
+            </th>
+            <th scope="col">Available files</th>
+            <th scope="col">Size</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="responses-table-body">
+          <tr>
+            <td colspan="6" class="muted">Loading response library…</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pagination">
+      <div class="action-row">
+        <button
+          class="button button--secondary button--small"
+          id="responses-prev"
+          type="button"
+        >
+          Previous
+        </button>
+        <span id="responses-page-info" class="muted">Page 1 of 1</span>
+        <button
+          class="button button--secondary button--small"
+          id="responses-next"
+          type="button"
+        >
+          Next
+        </button>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="responses-page-size"
+          >Rows per page</label
+        >
+        <select class="select" id="responses-page-size">
+          <option value="5">5</option>
+          <option value="10" selected>10</option>
+          <option value="20">20</option>
+        </select>
+      </div>
+    </div>
+  </section>
+</section>

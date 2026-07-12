@@ -1,0 +1,147 @@
+<section
+  class="tabpanel page-stack"
+  id="panel-advanced"
+  role="tabpanel"
+  aria-labelledby="tab-advanced"
+  tabindex="0"
+  data-panel="advanced"
+  hidden
+>
+  <section class="notice notice--warning">
+    <div class="notice__content">
+      <strong>Trusted-network management only</strong>
+      <p class="notice__message muted">
+        Home Assistant Ingress is authenticated. The direct management port has
+        no built-in authentication and must not be exposed to the public
+        internet.
+      </p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel__header">
+      <div>
+        <h2>Endpoint settings</h2>
+        <p>
+          Routes are fixed, validated service endpoints. Moonlight Voice has no
+          runtime aliases, proxy targets, or outbound request forwarding.
+        </p>
+      </div>
+    </div>
+    <div class="table-wrapper">
+      <table class="data-table data-table--endpoints">
+        <thead>
+          <tr>
+            <th scope="col">Endpoint</th>
+            <th scope="col">Method</th>
+            <th scope="col">Purpose</th>
+            <th scope="col">Active URL</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>/health</code></td>
+            <td>GET</td>
+            <td>Service status</td>
+            <td><code data-effective-url="health">—</code></td>
+          </tr>
+          <tr>
+            <td><code>/config</code></td>
+            <td>GET</td>
+            <td>Active configuration</td>
+            <td><code data-effective-url="config">—</code></td>
+          </tr>
+          <tr>
+            <td><code>/audio</code></td>
+            <td>GET, POST, DELETE</td>
+            <td>Default audio inventory and management</td>
+            <td><code data-effective-url="audio">—</code></td>
+          </tr>
+          <tr>
+            <td><code>/responses</code></td>
+            <td>GET, POST, PATCH, DELETE</td>
+            <td>Response library management</td>
+            <td><code data-effective-url="responses">—</code></td>
+          </tr>
+          <tr>
+            <td><code>/tts</code></td>
+            <td>GET, POST</td>
+            <td>Return matching or default audio</td>
+            <td><code data-effective-url="tts">—</code></td>
+          </tr>
+          <tr>
+            <td><code>/storage</code></td>
+            <td>DELETE</td>
+            <td>Clear all saved audio data</td>
+            <td><code data-effective-url="storage">—</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel__header">
+      <div>
+        <h2>Test a read-only endpoint</h2>
+        <p>Only built-in read-only endpoints can be tested from this page.</p>
+      </div>
+    </div>
+    <div class="endpoint-tools">
+      <div class="form-field">
+        <label class="form-label" for="endpoint-test-select">Endpoint</label>
+        <select class="select" id="endpoint-test-select">
+          <option value="health">GET /health</option>
+          <option value="version">GET /version</option>
+          <option value="config">GET /config</option>
+          <option value="audio">GET /audio</option>
+          <option value="responses">GET /responses</option>
+        </select>
+      </div>
+      <button class="button" id="endpoint-test" type="button">
+        Test request
+      </button>
+    </div>
+    <pre
+      class="code-block endpoint-result"
+      id="endpoint-test-result"
+      aria-live="polite"
+    >
+Choose an endpoint to inspect its JSON response.</pre>
+  </section>
+
+  <section class="panel">
+    <div class="panel__header">
+      <div>
+        <h2>Request example</h2>
+        <p>
+          We suggest the host you opened this UI from; change it if the local
+          direct port uses another hostname or IP.
+        </p>
+      </div>
+      <button
+        class="button button--secondary button--small"
+        id="copy-request-example"
+        type="button"
+      >
+        Copy example
+      </button>
+    </div>
+    <div class="request-settings">
+      <div class="form-field">
+        <label class="form-label" for="direct-host">Home Assistant host</label>
+        <input
+          class="field"
+          id="direct-host"
+          inputmode="url"
+          autocomplete="url"
+          placeholder="homeassistant.local"
+        />
+        <span class="form-help"
+          >Hostname or local IP; direct port defaults to 8031.</span
+        >
+      </div>
+    </div>
+    <pre class="code-block" id="request-example"></pre>
+  </section>
+</section>

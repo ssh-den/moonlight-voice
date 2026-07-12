@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+tests/
+.DS_Store
+.env
+.venv/
+node_modules/
+*.log
+*.mp3
+*.wav

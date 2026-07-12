@@ -1,0 +1,100 @@
+<section
+  class="tabpanel page-stack"
+  id="panel-service"
+  role="tabpanel"
+  aria-labelledby="tab-service"
+  tabindex="0"
+  data-panel="service"
+  hidden
+>
+  <section class="panel">
+    <div class="panel__header">
+      <div>
+        <h2>Service overview</h2>
+        <p>Read-only status and active configuration.</p>
+      </div>
+    </div>
+    <div class="grid grid--stats">
+      <div class="stat-card">
+        <span class="stat-card__label">Service</span>
+        <span class="stat-card__value badge" data-field="status">
+          <span class="status-dot"></span>Checking…
+        </span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card__label">Version</span>
+        <span class="stat-card__value" data-field="version">—</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card__label">Uptime</span>
+        <span class="stat-card__value" data-field="uptime">—</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card__label">Response codes</span>
+        <span class="stat-card__value" data-field="response-count">—</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card__label">Storage used</span>
+        <span class="stat-card__value" data-field="storage-used">—</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card__label">Default audio size</span>
+        <span class="stat-card__value" data-field="default-storage">—</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card__label">Responses size</span>
+        <span class="stat-card__value" data-field="responses-storage">—</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card__label">Default audio</span>
+        <span class="stat-card__value" data-field="default-audio">—</span>
+      </div>
+    </div>
+  </section>
+  <section class="panel">
+    <div class="panel__header">
+      <div>
+        <h2>Configuration</h2>
+        <p>Active runtime values reported by the service.</p>
+      </div>
+    </div>
+    <dl class="definition-list">
+      <div>
+        <dt>Output format</dt>
+        <dd data-field="output-format">—</dd>
+      </div>
+      <div>
+        <dt>Output file</dt>
+        <dd data-field="output-file">—</dd>
+      </div>
+      <div>
+        <dt>Cache headers</dt>
+        <dd data-field="cache-headers">—</dd>
+      </div>
+      <div>
+        <dt>Started at</dt>
+        <dd data-field="started-at">—</dd>
+      </div>
+    </dl>
+  </section>
+  <section
+    class="panel panel--danger service-storage-clear"
+    aria-labelledby="clear-storage-title"
+  >
+    <div class="panel__header">
+      <div>
+        <h2 id="clear-storage-title">Clear saved audio</h2>
+        <p>
+          Remove the default audio and every response clip from disk. This
+          cannot be undone.
+        </p>
+      </div>
+    </div>
+    <div class="panel__footer">
+      <button class="button button--danger" id="clear-storage" type="button">
+        <span data-icon="trash" aria-hidden="true"></span>
+        <span class="button__label">Clear all data</span>
+      </button>
+    </div>
+  </section>
+</section>

@@ -1,0 +1,100 @@
+:root {
+  color-scheme: dark;
+
+  --color-background: #0b1020;
+  --color-background-glow: rgb(167 139 250 / 12%);
+  --color-surface: #131a2c;
+  --color-surface-elevated: #1a2338;
+  --color-text: #f4f7fb;
+  --color-text-muted: #aeb8c9;
+  --color-border: #31405c;
+  --color-primary: #a78bfa;
+  --color-primary-strong: #c4b5fd;
+  --color-primary-subtle: rgb(167 139 250 / 17%);
+  --color-on-primary: #160d32;
+  --color-button-primary: var(--color-primary);
+  --color-button-primary-hover: var(--color-primary-strong);
+  --color-button-primary-text: var(--color-on-primary);
+  --color-button-secondary: var(--color-surface-elevated);
+  --color-button-secondary-hover: #26324c;
+  --color-button-danger-hover: rgb(251 113 133 / 12%);
+  --color-success: #4ade80;
+  --color-warning: #fbbf24;
+  --color-danger: #fb7185;
+  --color-focus: #67e8f9;
+  --color-focus-subtle: rgb(103 232 249 / 10%);
+  --color-code-background: #080c18;
+  --color-dialog-backdrop: rgb(0 0 0 / 60%);
+
+  --space-2xs: 0.25rem;
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.25rem;
+  --space-xl: 1.5rem;
+  --space-2xl: 2rem;
+
+  --control-height-sm: 2.25rem;
+  --control-height: 2.75rem;
+  --content-width: 72rem;
+  --page-min-width: 20rem;
+  --page-gutter: 2rem;
+  --background-glow-size: 22rem;
+  --content-width-narrow: 46rem;
+  --dialog-max-width: 32rem;
+  --table-min-width: 38rem;
+  --table-min-width-compact: 32rem;
+  --search-min-width: 16rem;
+  --stat-grid-min-width: 10rem;
+  --form-grid-min-width: 13rem;
+  --stat-card-min-height: 7.25rem;
+  --endpoint-result-min-height: 5rem;
+  --dropzone-min-height: var(--control-height);
+  --endpoint-control-max-width: 30rem;
+  --visually-hidden-size: 1px;
+  --icon-size: 1.25rem;
+  --status-dot-size: 0.625rem;
+  --touch-target: 2.75rem;
+
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 1rem;
+  --radius-pill: 999px;
+  --border-width: 1px;
+  --shadow-elevated: 0 1rem 3rem rgb(0 0 0 / 28%);
+  --motion-fast: 120ms;
+  --motion-standard: 180ms;
+  --motion-lift: -1px;
+  --ease-standard: ease;
+  --z-base: 0;
+  --z-sticky: 10;
+  --z-dialog: 100;
+
+  --font-sans:
+    system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-weight-regular: 400;
+  --font-weight-medium: 600;
+  --font-weight-bold: 700;
+  --line-height-body: 1.5;
+  --line-height-heading: 1.2;
+  --letter-spacing-tight: -0.015em;
+  --text-body: 1rem;
+  --text-meta: 0.875rem;
+  --text-label: 0.875rem;
+  --text-table: 0.9375rem;
+  --text-code: 0.875rem;
+  --text-stat: 1.15rem;
+  --text-icon-button: 1.25rem;
+  --focus-ring-width: 3px;
+  --focus-ring-offset: 3px;
+  --text-section: clamp(1.125rem, 1rem + 0.5vw, 1.35rem);
+  --text-page: clamp(1.75rem, 1.35rem + 1.5vw, 2.35rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 0ms;
+    --motion-standard: 0ms;
+  }
+}

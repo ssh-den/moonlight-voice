@@ -1,0 +1,55 @@
+<dialog class="dialog" id="confirm-dialog" aria-labelledby="confirm-title">
+  <form method="dialog" class="dialog__body">
+    <h2 id="confirm-title">Confirm action</h2>
+    <p id="confirm-message"></p>
+    <div class="dialog__actions">
+      <button class="button button--secondary" value="cancel">Cancel</button>
+      <button class="button button--danger" id="confirm-accept" value="confirm">
+        Continue
+      </button>
+    </div>
+  </form>
+</dialog>
+
+<dialog
+  class="dialog"
+  id="edit-response-dialog"
+  aria-labelledby="edit-response-title"
+>
+  <form method="dialog" class="dialog__body">
+    <h2 id="edit-response-title">Edit response</h2>
+    <p class="muted">
+      Rename the response and optionally upload a replacement clip. Existing
+      clips are retained until replaced.
+    </p>
+    <div class="form-field">
+      <label class="form-label" for="edit-response-code">Response code</label>
+      <input class="field" id="edit-response-code" required maxlength="256" />
+    </div>
+    <div class="form-field">
+      <label class="form-label" for="edit-response-file"
+        >Replacement audio (optional)</label
+      >
+      <div class="file-picker" data-file-picker>
+        <input
+          class="file-picker__input"
+          id="edit-response-file"
+          type="file"
+          accept=".mp3,.wav,audio/*"
+        />
+        <label class="file-picker__dropzone" for="edit-response-file">
+          <span data-icon="file-audio" aria-hidden="true"></span>
+          <span class="file-picker__prompt">Drop MP3/WAV or choose a file</span>
+          <span class="file-picker__name" data-file-name>No file selected</span>
+        </label>
+      </div>
+    </div>
+    <div class="dialog__actions">
+      <button class="button button--secondary" value="cancel">Cancel</button>
+      <button class="button" value="confirm">
+        <span data-icon="edit" aria-hidden="true"></span>
+        <span class="button__label">Save changes</span>
+      </button>
+    </div>
+  </form>
+</dialog>

@@ -1,0 +1,6 @@
+pytest>=8,<9
+black>=26,<27
+mypy>=2,<3
+pylint>=4,<5
+pyright>=1.1,<2
+ruff>=0.15,<1

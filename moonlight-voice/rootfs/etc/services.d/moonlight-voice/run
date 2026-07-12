@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "[moonlight-voice] s6 service wrapper starting at $(date -Is)"
+exec /opt/moonlight-voice/run.sh

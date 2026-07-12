@@ -1,0 +1,35 @@
+[tool.black]
+line-length = 100
+target-version = ["py314"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/test_*.py" = ["E402"]
+
+[tool.mypy]
+python_version = "3.14"
+mypy_path = "moonlight-voice"
+check_untyped_defs = true
+
+[tool.pyright]
+include = ["moonlight-voice/moonlight_voice", "tests", "moonlight-voice/tests"]
+extraPaths = ["moonlight-voice"]
+pythonVersion = "3.14"
+typeCheckingMode = "basic"
+
+[tool.pylint.main]
+py-version = "3.14"
+
+[tool.pylint."messages control"]
+disable = [
+  "C",
+  "R",
+  "broad-exception-caught",
+  "duplicate-code",
+]
