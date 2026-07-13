@@ -43,6 +43,11 @@
   font-size: var(--text-meta);
 }
 
+.button--icon {
+  width: var(--control-height-sm);
+  padding-inline: 0;
+}
+
 .button__label {
   white-space: nowrap;
 }

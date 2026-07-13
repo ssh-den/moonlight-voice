@@ -37,6 +37,12 @@ export function createApi() {
     endpoint,
     getHealth: () => request("health"),
     getConfig: () => request("config"),
+    updateConfig: (settings) =>
+      request("config", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(settings),
+      }),
     getAudio: () => request("audio"),
     getResponses: (params) => request(`responses?${params.toString()}`),
     uploadDefault: (file) =>

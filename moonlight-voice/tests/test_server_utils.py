@@ -23,6 +23,15 @@ def test_extract_tts_text_handles_openai_payloads():
     assert result == "one two"
 
 
+def test_extract_tts_text_handles_home_assistant_payload():
+    handler = object.__new__(server.MoonlightVoiceRequestHandler)
+    body = json.dumps({"message": "front door", "format": "mp3"}).encode()
+
+    result = handler._extract_tts_text(server.urlparse("/tts"), body)
+
+    assert result == "front door"
+
+
 def test_set_audio_purges_stale_files(tmp_path, monkeypatch):
     config = ServiceConfig(output_file=str(tmp_path / "default.mp3"))
     audio_cache, file_map, audio_dir = server.load_audio_files(config)

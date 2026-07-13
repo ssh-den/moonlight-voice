@@ -51,6 +51,7 @@ class StaticAssetsTest(unittest.TestCase):
         index, _ = load_index_html(get_static_dir())
         css, _ = load_static_asset("css/components.css", get_static_dir())
         dom, _ = load_static_asset("js/dom.js", get_static_dir())
+        audio_library, _ = load_static_asset("js/features/audio-library.js", get_static_dir())
         for icon in (
             "edit",
             "file-audio",
@@ -71,6 +72,15 @@ class StaticAssetsTest(unittest.TestCase):
         self.assertIn(b"data-file-picker", index)
         self.assertIn(b"dragover", dom)
         self.assertIn(b"dataTransfer", dom)
+        self.assertIn(b"default-file-info", index)
+        self.assertIn(b"default_file_details", audio_library)
+        self.assertIn(b'"Delete response"', audio_library)
+        self.assertIn(b'`Delete response "${code}"? This cannot be undone.`', audio_library)
+        self.assertIn(b"await api.deleteResponse(code)", audio_library)
+        self.assertIn(b"createNotice({ dismissAfterMs = 0 } = {})", dom)
+        self.assertIn(b"if (dismissAfterMs > 0)", dom)
+        self.assertIn(b'id="tts-settings-form"', index)
+        self.assertIn(b"updateConfig", load_static_asset("js/api.js", get_static_dir())[0])
 
     def test_index_is_composed_from_readable_components(self) -> None:
         index, _ = load_index_html(get_static_dir())

@@ -21,8 +21,8 @@ run() {
   fi
 }
 
-run black .venv/bin/black --check moonlight-voice/moonlight_voice tests moonlight-voice/tests
-run ruff .venv/bin/ruff check moonlight-voice/moonlight_voice tests moonlight-voice/tests
+run black .venv/bin/black --check moonlight-voice/moonlight_voice custom_components tests moonlight-voice/tests
+run ruff .venv/bin/ruff check moonlight-voice/moonlight_voice custom_components tests moonlight-voice/tests
 run pylint env PYTHONPATH=moonlight-voice .venv/bin/pylint moonlight-voice/moonlight_voice tests
 run mypy env PYTHONPATH=moonlight-voice .venv/bin/mypy moonlight-voice/moonlight_voice tests moonlight-voice/tests
 run pyright env PYTHONPATH=moonlight-voice .venv/bin/pyright

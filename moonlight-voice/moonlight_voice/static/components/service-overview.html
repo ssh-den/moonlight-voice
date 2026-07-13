@@ -51,18 +51,43 @@
       </div>
     </div>
   </section>
+  <section class="panel" aria-labelledby="tts-settings-title">
+    <div class="panel__header">
+      <div>
+        <h2 id="tts-settings-title">TTS settings</h2>
+        <p>Applied immediately and retained after the service restarts.</p>
+      </div>
+    </div>
+    <form id="tts-settings-form" class="grid grid--form">
+      <div class="form-field">
+        <label class="form-label" for="tts-mode">TTS mode</label>
+        <select class="select" id="tts-mode" name="tts_mode">
+          <option value="openai_compatible">OpenAI-compatible</option>
+          <option value="home_assistant">Home Assistant TTS</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="output-format">Output format</label>
+        <select class="select" id="output-format" name="output_format">
+          <option value="mp3">MP3</option>
+          <option value="wav">WAV</option>
+        </select>
+      </div>
+      <div class="action-row">
+        <button class="button" id="save-tts-settings" type="submit">
+          Save TTS settings
+        </button>
+      </div>
+    </form>
+  </section>
   <section class="panel">
     <div class="panel__header">
       <div>
-        <h2>Configuration</h2>
-        <p>Active runtime values reported by the service.</p>
+        <h2>Runtime details</h2>
+        <p>Read-only values reported by the service.</p>
       </div>
     </div>
     <dl class="definition-list">
-      <div>
-        <dt>Output format</dt>
-        <dd data-field="output-format">—</dd>
-      </div>
       <div>
         <dt>Output file</dt>
         <dd data-field="output-file">—</dd>

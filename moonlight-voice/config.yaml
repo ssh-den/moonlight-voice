@@ -1,5 +1,5 @@
 name: Moonlight Voice
-version: 1.0.0
+version: 1.1.0
 slug: moonlight-voice
 description: Local deterministic audio-response service for Home Assistant, maintained by ssh-den
 arch:
@@ -17,14 +17,12 @@ map:
   - config:rw
   - share:rw
 options:
-  output_format: mp3
   output_file: default.mp3
   log_level: info
   cache_headers: false
   max_upload_size_mb: 20
   port: 8031
 schema:
-  output_format: list(mp3|wav)
   output_file: str
   log_level: list(debug|info|warn|error)
   cache_headers: bool

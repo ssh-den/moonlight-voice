@@ -75,3 +75,26 @@ def test_store_audio_removes_stale_alternate(tmp_path: Path):
     # Only the mp3 should be cached.
     entry = next(iter(lib.entries.values()))
     assert "wav" not in lib.cache.get(entry.key, {})
+
+
+def test_response_audio_falls_back_to_available_format(tmp_path: Path):
+    base = tmp_path / "data"
+    base.mkdir()
+    lib = ResponseLibrary(base, converter=lambda d, s, t: (None, "conversion disabled"))
+    lib.store_audio("Success", b"mp3-bytes", filename="success.mp3")
+
+    audio, fmt = lib.audio_for_preferred_format("success", "wav")
+
+    assert audio == b"mp3-bytes"
+    assert fmt == "mp3"
+
+
+def test_tts_cache_key_changes_with_response_library(tmp_path: Path):
+    base = tmp_path / "data"
+    base.mkdir()
+    lib = ResponseLibrary(base, converter=lambda d, s, t: (None, "conversion disabled"))
+    original_key = lib.tts_cache_key()
+
+    lib.store_audio("Success", b"mp3-bytes", filename="success.mp3")
+
+    assert lib.tts_cache_key() != original_key

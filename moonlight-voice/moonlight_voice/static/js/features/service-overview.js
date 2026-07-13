@@ -1,4 +1,5 @@
 import {
+  byId,
   formatBytes,
   formatDuration,
   formatTimestamp,
@@ -15,6 +16,16 @@ export function setupServiceOverview({ state, api, dialogs, notify, refresh }) {
   const clearStorage = /** @type {HTMLButtonElement | null} */ (
     document.getElementById("clear-storage")
   );
+  const settingsForm = byId("tts-settings-form");
+  const ttsMode = byId("tts-mode");
+  const outputFormat = byId("output-format");
+  const saveSettings = byId("save-tts-settings");
+
+  function renderTtsSettings(config) {
+    if (!config || settingsForm?.dataset.dirty === "true") return;
+    ttsMode.value = config.tts_mode || "openai_compatible";
+    outputFormat.value = config.output_format || "mp3";
+  }
 
   function render() {
     const health = state.get("health");
@@ -23,6 +34,7 @@ export function setupServiceOverview({ state, api, dialogs, notify, refresh }) {
     const responses = state.get("responses");
     if (!health && !config && !audio) return;
     const healthy = health?.status === "ok";
+    renderTtsSettings(config);
     const status = fields.status;
     if (status) {
       status.replaceChildren();
@@ -36,7 +48,6 @@ export function setupServiceOverview({ state, api, dialogs, notify, refresh }) {
     setText(fields.version, config?.version || state.get("version") || "—");
     setText(fields.uptime, formatDuration(health?.uptime_seconds));
     setText(fields["started-at"], formatTimestamp(health?.started_at));
-    setText(fields["output-format"], config?.output_format || "—");
     setText(fields["output-file"], config?.output_file || "—");
     setText(
       fields["cache-headers"],
@@ -76,6 +87,29 @@ export function setupServiceOverview({ state, api, dialogs, notify, refresh }) {
       notify(error.message);
     } finally {
       clearStorage.disabled = false;
+    }
+  });
+
+  [ttsMode, outputFormat].forEach((input) =>
+    input?.addEventListener("change", () => {
+      settingsForm.dataset.dirty = "true";
+    }),
+  );
+  settingsForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    saveSettings.disabled = true;
+    try {
+      const config = await api.updateConfig({
+        tts_mode: ttsMode.value,
+        output_format: outputFormat.value,
+      });
+      settingsForm.dataset.dirty = "false";
+      state.set("config", config);
+      notify("TTS settings saved.", "success");
+    } catch (error) {
+      notify(error.message);
+    } finally {
+      saveSettings.disabled = false;
     }
   });
 

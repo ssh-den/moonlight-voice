@@ -1,0 +1,17 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "url": "Moonlight Voice URL"
+        },
+        "description": "For a locally deployed add-on use http://local-moonlight-voice:8031. For another repository, use its generated add-on hostname. Set the add-on TTS mode to Home Assistant TTS first."
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to Moonlight Voice.",
+      "home_assistant_mode_required": "Set the add-on TTS mode to Home Assistant TTS and restart the add-on.",
+      "invalid_url": "Enter a valid HTTP or HTTPS URL."
+    }
+  }
+}

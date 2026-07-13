@@ -7,10 +7,13 @@ Moonlight Voice serves local HTTP endpoints. The Home Assistant **Open Web UI** 
 `GET` or `POST /tts` returns an audio stream.
 
 - `text` may be supplied as a query parameter or JSON field.
+- `message` is accepted as a JSON field for the native Home Assistant TTS integration.
 - `input` is accepted as a JSON field, including a list of strings or `{ "text": "..." }` items.
 - `format` may be `mp3` or `wav` in the query or JSON body; the configured output format is used otherwise.
 - A non-empty response code matches when the normalized request text is identical: surrounding whitespace is removed and comparison is case-insensitive.
-- If no response code matches, the configured default clip is returned. If neither requested nor fallback audio is available, the service returns `500` JSON with an `error` field.
+- If a response code matches but its requested format is unavailable, its other available format is returned before falling back to the default clip. If no response code matches, the configured default clip is returned. If neither requested nor fallback audio is available, the service returns `500` JSON with an `error` field.
+
+The add-on option `tts_mode` selects the primary client: `openai_compatible` is the default for the existing `input`/`text` shim, while `home_assistant` enables the native integration. Both payload forms remain accepted so changing the mode does not break a previously configured endpoint.
 
 ```bash
 curl --request POST \
@@ -53,5 +56,7 @@ Invalid `Content-Length`, filenames, response codes, or audio content return a J
 ## Storage and retention
 
 The service keeps the default clips, response clips, and `responses.json` metadata in `/data/moonlight-voice`, which persists across add-on restarts. Replacing a default clip removes stale default files; response clips remain until explicitly deleted.
+
+`GET /config` includes `tts_cache_key`, a fingerprint of the default and response clips. The native integration refreshes it every five seconds and includes it in Home Assistant's TTS cache key, so a changed clip does not reuse a previously cached default response.
 
 Moonlight Voice makes no outbound network calls. It does not provide a public-internet authentication layer, so use Home Assistant Ingress for browser management and do not publish the direct port through a router or reverse proxy.

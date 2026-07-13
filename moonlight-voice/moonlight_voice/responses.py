@@ -5,6 +5,7 @@ import shutil
 import threading
 import time
 from dataclasses import dataclass, field
+from hashlib import sha256
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple
 
@@ -262,6 +263,30 @@ class ResponseLibrary:
             self._cache_audio(key, fmt, data)
             return data
         return None
+
+    def audio_for_preferred_format(
+        self, code: str, preferred_format: str
+    ) -> tuple[Optional[bytes], Optional[str]]:
+        """Return a response clip, preferring but not requiring one format."""
+        formats = (preferred_format, "wav" if preferred_format == "mp3" else "mp3")
+        for fmt in formats:
+            audio = self.audio_for(code, fmt)
+            if audio is not None:
+                return audio, fmt
+        return None, None
+
+    def tts_cache_key(self) -> str:
+        """Return a stable fingerprint that changes with the response library."""
+        digest = sha256()
+        with self._lock:
+            for entry in sorted(self.entries.values(), key=lambda item: item.key):
+                digest.update(entry.key.encode("utf-8"))
+                digest.update(str(entry.updated_at).encode("ascii"))
+                for fmt, file in sorted(entry.files.items()):
+                    digest.update(fmt.encode("ascii"))
+                    digest.update(str(file.size).encode("ascii"))
+                    digest.update(str(file.updated_at).encode("ascii"))
+        return digest.hexdigest()
 
     def _remove_file(self, entry: ResponseEntry, fmt: str) -> None:
         file_meta = entry.files.pop(fmt, None)

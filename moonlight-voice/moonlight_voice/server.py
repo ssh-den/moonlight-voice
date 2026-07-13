@@ -4,6 +4,7 @@ import subprocess
 import tempfile
 import time
 from dataclasses import asdict, dataclass
+from hashlib import sha256
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -15,6 +16,65 @@ from .responses import ResponseLibrary
 from .web import get_static_dir, load_index_html, load_static_asset
 
 LOGGER = logging.getLogger("moonlight_voice.server")
+SENSITIVE_DEBUG_FIELDS = {"authorization", "cookie", "key", "password", "secret", "token"}
+DEBUG_BODY_LIMIT = 4_096
+
+
+def _redact_debug_value(value):
+    if isinstance(value, dict):
+        return {
+            key: (
+                "<redacted>"
+                if any(field in key.lower() for field in SENSITIVE_DEBUG_FIELDS)
+                else _redact_debug_value(item)
+            )
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [_redact_debug_value(item) for item in value]
+    return value
+
+
+def _format_debug_body(body: bytes, content_type: Optional[str]) -> str:
+    """Format a request body for debug logs without exposing binary uploads."""
+    if not body:
+        return "<empty>"
+    if content_type and "json" not in content_type.lower() and not content_type.startswith("text/"):
+        return f"<{len(body)} bytes of binary data>"
+    try:
+        payload = json.loads(body.decode("utf-8"))
+    except UnicodeDecodeError, json.JSONDecodeError:
+        try:
+            payload = body.decode("utf-8")
+        except UnicodeDecodeError:
+            return f"<{len(body)} bytes of binary data>"
+    rendered = json.dumps(_redact_debug_value(payload), ensure_ascii=False, default=str)
+    if len(rendered) > DEBUG_BODY_LIMIT:
+        return f"{rendered[:DEBUG_BODY_LIMIT]}... <truncated>"
+    return rendered
+
+
+def _describe_tts_payload(parsed, body: bytes) -> str:
+    query = parse_qs(parsed.query or "")
+    if "text" in query:
+        return "query:text"
+    if not body:
+        return "empty"
+    try:
+        payload = json.loads(body.decode("utf-8"))
+    except UnicodeDecodeError, json.JSONDecodeError:
+        return "non-json"
+    if isinstance(payload, dict):
+        if "message" in payload:
+            return "home_assistant:message"
+        if "input" in payload:
+            return "openai_compatible:input"
+        if "text" in payload:
+            return "openai_compatible:text"
+        return "json:object"
+    if isinstance(payload, list):
+        return "json:array"
+    return f"json:{type(payload).__name__}"
 
 
 @dataclass
@@ -135,6 +195,40 @@ class MoonlightVoiceRequestHandler(BaseHTTPRequestHandler):
         else:
             self.send_header("Cache-Control", "no-store")
 
+    def _debug_request(self, parsed) -> None:
+        if not LOGGER.isEnabledFor(logging.DEBUG):
+            return
+        headers = _redact_debug_value(dict(self.headers.items()))
+        query = _redact_debug_value(parse_qs(parsed.query or "", keep_blank_values=True))
+        LOGGER.debug(
+            "Incoming HTTP request from %s | method=%s | path=%s | query=%s | "
+            "tts_mode=%s | headers=%s",
+            self.client_address[0],
+            self.command,
+            parsed.path,
+            query,
+            self.server.config.tts_mode,
+            headers,
+        )
+
+    def _debug_request_body(self, body: bytes) -> None:
+        if LOGGER.isEnabledFor(logging.DEBUG):
+            LOGGER.debug(
+                "Incoming HTTP request body | method=%s | path=%s | content_type=%s | payload=%s",
+                self.command,
+                urlparse(self.path).path,
+                self.headers.get("Content-Type"),
+                _format_debug_body(body, self.headers.get("Content-Type")),
+            )
+
+    def _debug_tts_request(self, parsed, body: bytes) -> None:
+        if LOGGER.isEnabledFor(logging.DEBUG):
+            LOGGER.debug(
+                "Incoming TTS request format=%s | configured_tts_mode=%s",
+                _describe_tts_payload(parsed, body),
+                self.server.config.tts_mode,
+            )
+
     def _read_request_body(self, *, required: bool = False) -> Optional[bytes]:
         header = self.headers.get("Content-Length")
         if header is None:
@@ -166,10 +260,13 @@ class MoonlightVoiceRequestHandler(BaseHTTPRequestHandler):
         if required and content_length == 0:
             self._json_response({"error": "audio body required"}, status=HTTPStatus.BAD_REQUEST)
             return None
-        return self.rfile.read(content_length)
+        body = self.rfile.read(content_length)
+        self._debug_request_body(body)
+        return body
 
     def do_GET(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
+        self._debug_request(parsed)
         if parsed.path == "/":
             self._serve_root()
         elif parsed.path.startswith("/static/"):
@@ -185,10 +282,7 @@ class MoonlightVoiceRequestHandler(BaseHTTPRequestHandler):
         elif parsed.path == "/version":
             self._json_response({"version": self.server.config.version})
         elif parsed.path == "/config":
-            safe_config = asdict(self.server.config)
-            safe_config["output_file"] = str(self.server.config.resolved_audio_path())
-            safe_config["available_formats"] = sorted(self.server.audio_cache.keys())
-            self._json_response(safe_config)
+            self._json_response(self.server.describe_config())
         elif parsed.path == "/audio":
             if parse_qs(parsed.query or "").get("stream"):
                 self._serve_default_audio(parsed)
@@ -201,16 +295,19 @@ class MoonlightVoiceRequestHandler(BaseHTTPRequestHandler):
         elif parsed.path == "/responses/file":
             self._serve_response_audio(parsed)
         elif parsed.path == "/tts":
+            self._debug_tts_request(parsed, b"")
             self._handle_tts(parsed, b"")
         else:
             self._json_response({"error": "Not found"}, status=HTTPStatus.NOT_FOUND)
 
     def do_POST(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
+        self._debug_request(parsed)
         if parsed.path == "/tts":
             body = self._read_request_body()
             if body is None:
                 return
+            self._debug_tts_request(parsed, body)
             self._handle_tts(parsed, body)
         elif parsed.path == "/audio":
             self._handle_audio_upload(parsed)
@@ -221,6 +318,7 @@ class MoonlightVoiceRequestHandler(BaseHTTPRequestHandler):
 
     def do_DELETE(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
+        self._debug_request(parsed)
         if parsed.path == "/audio":
             self._handle_audio_delete(parsed)
         elif parsed.path == "/responses":
@@ -232,11 +330,17 @@ class MoonlightVoiceRequestHandler(BaseHTTPRequestHandler):
 
     def do_PATCH(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
+        self._debug_request(parsed)
         if parsed.path == "/responses":
             body = self._read_request_body()
             if body is None:
                 return
             self._handle_response_update(body)
+        elif parsed.path == "/config":
+            body = self._read_request_body(required=True)
+            if body is None:
+                return
+            self._handle_config_update(body)
         else:
             self._json_response({"error": "Not found"}, status=HTTPStatus.NOT_FOUND)
 
@@ -279,6 +383,11 @@ class MoonlightVoiceRequestHandler(BaseHTTPRequestHandler):
         try:
             payload = json.loads(body.decode("utf-8"))
             if isinstance(payload, dict):
+                # The native Home Assistant integration sends `message`; the
+                # OpenAI-compatible shim uses `input` or `text`.  Supporting
+                # both makes switching modes non-destructive for existing clients.
+                if "message" in payload:
+                    return str(payload.get("message") or "")
                 if "text" in payload:
                     return str(payload.get("text") or "")
                 if "input" in payload:
@@ -319,12 +428,14 @@ class MoonlightVoiceRequestHandler(BaseHTTPRequestHandler):
         audio_bytes = None
         content_type = None
         response_source = "default"
+        served_format = selected_format
         if response_entry:
-            audio_bytes = self.server.response_library.audio_for(
+            audio_bytes, response_format = self.server.response_library.audio_for_preferred_format(
                 response_entry.code, selected_format
             )
-            if audio_bytes:
-                content_type = "audio/mpeg" if selected_format == "mp3" else "audio/wav"
+            if audio_bytes is not None and response_format is not None:
+                served_format = response_format
+                content_type = "audio/mpeg" if served_format == "mp3" else "audio/wav"
                 response_source = response_entry.code
 
         if audio_bytes is None or content_type is None:
@@ -341,9 +452,10 @@ class MoonlightVoiceRequestHandler(BaseHTTPRequestHandler):
         if len(truncated) > 120:
             truncated = truncated[:117] + "..."
         LOGGER.info(
-            'TTS request from %s | format=%s | text="%s" | served=%s',
+            'TTS request from %s | mode=%s | format=%s | text="%s" | served=%s',
             self.client_address[0],
-            selected_format,
+            self.server.config.tts_mode,
+            served_format,
             truncated,
             response_source,
         )
@@ -496,6 +608,21 @@ class MoonlightVoiceRequestHandler(BaseHTTPRequestHandler):
                 status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
+    def _handle_config_update(self, body: bytes) -> None:
+        try:
+            settings = json.loads(body.decode("utf-8"))
+            self._json_response(self.server.update_webui_settings(settings))
+        except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+            self._json_response(
+                {"error": str(exc) or "invalid json"}, status=HTTPStatus.BAD_REQUEST
+            )
+        except OSError:
+            LOGGER.exception("Failed to save WebUI settings")
+            self._json_response(
+                {"error": "failed to save settings"},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
+
     def _handle_response_delete(self, parsed) -> None:
         query = parse_qs(parsed.query or "")
         codes = [code for code in query.get("code", []) if code]
@@ -575,6 +702,18 @@ class MoonlightVoiceServer(ThreadingHTTPServer):
 
     def uptime_seconds(self) -> float:
         return time.time() - self.started_at
+
+    def describe_config(self) -> Dict:
+        safe_config = asdict(self.config)
+        safe_config.pop("webui_settings_path", None)
+        safe_config["output_file"] = str(self.config.resolved_audio_path())
+        safe_config["available_formats"] = sorted(self.audio_cache.keys())
+        safe_config["tts_cache_key"] = self.tts_cache_key()
+        return safe_config
+
+    def update_webui_settings(self, settings: object) -> Dict:
+        self.config.update_webui_settings(settings)
+        return self.describe_config()
 
     def get_audio(
         self, output_format: str, prefer_disk: bool = False
@@ -723,6 +862,20 @@ class MoonlightVoiceServer(ThreadingHTTPServer):
             "default_audio_deleted": self.delete_audio(),
             "responses": self.response_library.clear(),
         }
+
+    def tts_cache_key(self) -> str:
+        """Return a fingerprint for every clip that may be served by `/tts`."""
+        digest = sha256(self.response_library.tts_cache_key().encode("ascii"))
+        for fmt, path_str in sorted(self.active_files.items()):
+            path = Path(path_str)
+            try:
+                stat = path.stat()
+            except FileNotFoundError:
+                continue
+            digest.update(fmt.encode("ascii"))
+            digest.update(str(stat.st_size).encode("ascii"))
+            digest.update(str(stat.st_mtime_ns).encode("ascii"))
+        return digest.hexdigest()
 
     def describe_audio(self) -> Dict:
         default_files = []

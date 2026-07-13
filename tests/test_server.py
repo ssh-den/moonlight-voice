@@ -4,6 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
+from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parents[1] / "moonlight-voice"
 if str(ROOT) not in sys.path:
@@ -12,6 +13,8 @@ if str(ROOT) not in sys.path:
 from moonlight_voice.config import ServiceConfig
 from moonlight_voice.server import (
     MoonlightVoiceServer,
+    _describe_tts_payload,
+    _format_debug_body,
     _transcode_audio,
     load_audio_files,
 )
@@ -136,6 +139,52 @@ class ServerAudioLoadTest(unittest.TestCase):
                 self.assertEqual(server.audio_cache["mp3"], MP3_BYTES)
             finally:
                 server.server_close()
+
+    def test_webui_settings_are_reported_without_storage_path(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            base = Path(tmpdir)
+            config = ServiceConfig(
+                output_file=str(base / "default.mp3"),
+                webui_settings_path=base / "settings.json",
+            )
+            audio_cache, files, audio_dir = load_audio_files(config)
+            server = MoonlightVoiceServer(("localhost", 0), config, audio_cache, files, audio_dir)
+            try:
+                reported = server.update_webui_settings(
+                    {"tts_mode": "home_assistant", "output_format": "wav"}
+                )
+                self.assertEqual(reported["tts_mode"], "home_assistant")
+                self.assertEqual(reported["output_format"], "wav")
+                self.assertNotIn("webui_settings_path", reported)
+                self.assertTrue(config.webui_settings_path.exists())
+            finally:
+                server.server_close()
+
+
+class RequestDebugLoggingTest(unittest.TestCase):
+    def test_debug_body_redacts_sensitive_json_fields(self) -> None:
+        body = b'{"message":"Doorbell","api_key":"secret","nested":{"token":"hidden"}}'
+
+        rendered = _format_debug_body(body, "application/json")
+
+        self.assertIn('"message": "Doorbell"', rendered)
+        self.assertNotIn("secret", rendered)
+        self.assertNotIn("hidden", rendered)
+        self.assertEqual(_format_debug_body(MP3_BYTES, "audio/mpeg"), "<10 bytes of binary data>")
+
+    def test_tts_payload_description_identifies_supported_client_formats(self) -> None:
+        self.assertEqual(
+            _describe_tts_payload(urlparse("/tts"), b'{"message":"Doorbell"}'),
+            "home_assistant:message",
+        )
+        self.assertEqual(
+            _describe_tts_payload(urlparse("/tts"), b'{"input":"Doorbell"}'),
+            "openai_compatible:input",
+        )
+        self.assertEqual(
+            _describe_tts_payload(urlparse("/tts?text=Doorbell"), b""),
+            "query:text",
+        )
 
 
 class TranscodeAudioTest(unittest.TestCase):

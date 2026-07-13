@@ -37,6 +37,12 @@ const ICON_SHAPES = {
 };
 
 let moonStarGradientId = 0;
+const MOON_STAR_PATHS = [
+  "M9.7 3.1a8.8 8.8 0 1 1-6.6 13.7 7.7 7.7 0 0 0 6.6-13.7Z",
+  "m5.6 4.2.8 2.1 2.1.8-2.1.8-.8 2.1-.8-2.1-2.1-.8 2.1-.8.8-2.1Z",
+  "m8.25 10.3.45 1.15 1.15.45-1.15.45-.45 1.15-.45-1.15-1.15-.45 1.15-.45.45-1.15Z",
+  "m4.8 11.2.35.9.9.35-.9.35-.35.9-.35-.9-.9-.35.9-.35.35-.9Z",
+];
 
 function addMoonStar(icon) {
   const gradientId = `moon-star-gradient-${(moonStarGradientId += 1)}`;
@@ -62,10 +68,7 @@ function addMoonStar(icon) {
   defs.append(gradient);
   icon.append(defs);
   icon.setAttribute("stroke", "none");
-  [
-    "M14.3 3.1a8.8 8.8 0 1 0 6.6 13.7 7.7 7.7 0 0 1-6.6-13.7Z",
-    "m18.4 4.2.8 2.1 2.1.8-2.1.8-.8 2.1-.8-2.1-2.1-.8 2.1-.8.8-2.1Z",
-  ].forEach((pathData) => {
+  MOON_STAR_PATHS.forEach((pathData) => {
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
     path.setAttribute("d", pathData);
     path.setAttribute("fill", `url(#${gradientId})`);
@@ -139,9 +142,8 @@ export function formatTimestamp(value) {
     : "—";
 }
 
-export function createNotice() {
+export function createNotice({ dismissAfterMs = 0 } = {}) {
   const region = byId("notice-region");
-  const dismissAfterMs = 5000;
   return (message, type = "error") => {
     if (!region) return;
     const notice = document.createElement("div");
@@ -162,7 +164,7 @@ export function createNotice() {
     content.append(text);
     notice.append(content, close);
     region.replaceChildren(notice);
-    window.setTimeout(dismiss, dismissAfterMs);
+    if (dismissAfterMs > 0) window.setTimeout(dismiss, dismissAfterMs);
   };
 }
 

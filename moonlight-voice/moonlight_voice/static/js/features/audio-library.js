@@ -21,6 +21,7 @@ export function setupAudioLibrary({
     defaultUploadLabel: document.querySelector("[data-default-upload-label]"),
     defaultPlay: byId("default-play"),
     defaultDelete: byId("default-delete"),
+    defaultFileInfo: byId("default-file-info"),
     responseForm: byId("response-upload-form"),
     responseCode: byId("response-code"),
     responseFile: byId("response-file"),
@@ -60,12 +61,22 @@ export function setupAudioLibrary({
     renderSelectionStatus();
   }
   function renderDefaultControls() {
-    const hasAudio = Object.keys(state.get("audio")?.files || {}).length > 0;
+    const audio = state.get("audio");
+    const details = audio?.default_file_details || [];
+    const hasAudio = Object.keys(audio?.files || {}).length > 0;
     ui.defaultUploadLabel.textContent = hasAudio
       ? "Replace default"
       : "Upload default";
     ui.defaultPlay.disabled = model.busy || !hasAudio;
     ui.defaultDelete.disabled = model.busy || !hasAudio;
+    ui.defaultFileInfo.textContent = details.length
+      ? details
+          .map(
+            ({ format, size, updated_at }) =>
+              `${format.toUpperCase()} · ${formatBytes(size)} · ${formatTimestamp(updated_at)}`,
+          )
+          .join(" | ")
+      : "No default response uploaded.";
   }
   function updateResponseUploadLabel() {
     ui.responseUploadLabel.textContent = model.codes.has(
@@ -90,13 +101,16 @@ export function setupAudioLibrary({
             : "↕";
       });
   }
-  function button(label, action, code, iconName) {
+  function button(label, action, code, iconName, format) {
     const element = document.createElement("button");
     element.type = "button";
-    element.className = "button button--secondary button--small";
-    element.append(createIcon(iconName), document.createTextNode(label));
+    element.className = "button button--secondary button--small button--icon";
+    element.append(createIcon(iconName));
     element.dataset.action = action;
     element.dataset.code = code;
+    if (format) element.dataset.format = format;
+    element.setAttribute("aria-label", label);
+    element.title = label;
     return element;
   }
   function renderSelectionStatus() {
@@ -165,7 +179,24 @@ export function setupAudioLibrary({
       const actions = document.createElement("td");
       const actionRow = document.createElement("div");
       actionRow.className = "action-row";
+      const availableFormats = Object.keys(item.formats || {});
+      const preferredFormat = state.get("config")?.output_format || "mp3";
+      const previewFormat = availableFormats.includes(preferredFormat)
+        ? preferredFormat
+        : availableFormats[0];
+      if (previewFormat)
+        actionRow.append(
+          button("Play", "play", item.code, "play", previewFormat),
+        );
       actionRow.append(button("Edit", "edit", item.code, "edit"));
+      const deleteButton = button(
+        "Delete response",
+        "delete",
+        item.code,
+        "trash",
+      );
+      deleteButton.classList.replace("button--secondary", "button--danger");
+      actionRow.append(deleteButton);
       actions.append(actionRow);
       row.append(selection, code, updated, formats, size, actions);
       ui.table.append(row);
@@ -289,7 +320,36 @@ export function setupAudioLibrary({
       /** @type {HTMLElement} */ (event.target).closest("button[data-action]")
     );
     if (!target) return;
-    const { action, code } = target.dataset;
+    const { action, code, format } = target.dataset;
+    if (action === "play") {
+      play(
+        api.endpoint(
+          `responses/file?code=${encodeURIComponent(code)}&format=${encodeURIComponent(format)}`,
+        ),
+      );
+      return;
+    }
+    if (action === "delete") {
+      if (
+        !(await dialogs.confirm(
+          `Delete response "${code}"? This cannot be undone.`,
+          "Delete response",
+        ))
+      )
+        return;
+      setBusy(true);
+      try {
+        await api.deleteResponse(code);
+        model.selected.delete(code);
+        await Promise.all([loadResponses(), refreshService()]);
+        notify("Response deleted.", "success");
+      } catch (error) {
+        notify(error.message);
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
     if (action !== "edit") return;
     const changes = await dialogs.editResponse(code);
     if (!changes || !changes.code) return;
