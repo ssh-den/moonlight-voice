@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.0
+
+- Added the Moonlight Voice icon to the integration's local `brand/` directory so it is displayed by current Home Assistant and HACS installations.
+- Updated the icon-generation script to keep the local integration brand asset in sync with the other generated icons.
+
 ## 1.1.0
 
 - Added a selectable TTS mode and persistent Web UI settings for OpenAI-compatible clients or Home Assistant's native TTS platform.

@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCE_ICON = ROOT / "moonlight-voice/moonlight_voice/static/assets/icons/moon-star.svg"
 TARGETS = {
     ROOT / "brand/icon.png": 512,
+    ROOT / "custom_components/moonlight_voice/brand/icon.png": 512,
     ROOT / "moonlight-voice/icon.png": 512,
 }
 CANVAS_SIZE = 1024

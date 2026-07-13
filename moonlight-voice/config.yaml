@@ -1,5 +1,5 @@
 name: Moonlight Voice
-version: 1.1.0
+version: 1.2.0
 slug: moonlight-voice
 description: Local deterministic audio-response service for Home Assistant, maintained by ssh-den
 arch:

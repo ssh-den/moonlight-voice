@@ -12,6 +12,7 @@ CONFIG_YAML_PATH = ADDON_ROOT / "config.yaml"
 INTEGRATION_MANIFEST_PATH = ROOT / "custom_components" / "moonlight_voice" / "manifest.json"
 HACS_MANIFEST_PATH = ROOT / "hacs.json"
 BRAND_ICON_PATH = ROOT / "brand" / "icon.png"
+INTEGRATION_ICON_PATH = INTEGRATION_MANIFEST_PATH.parent / "brand" / "icon.png"
 ADDON_ICON_PATH = ADDON_ROOT / "icon.png"
 SOURCE_ICON_PATH = ADDON_ROOT / "moonlight_voice/static/assets/icons/moon-star.svg"
 WEBUI_DOM_PATH = ADDON_ROOT / "moonlight_voice/static/js/dom.js"
@@ -84,6 +85,7 @@ class VersionConsistencyTest(unittest.TestCase):
         )
         self.assertTrue(BRAND_ICON_PATH.read_bytes().startswith(b"\x89PNG\r\n\x1a\n"))
         self.assertEqual(BRAND_ICON_PATH.read_bytes(), ADDON_ICON_PATH.read_bytes())
+        self.assertEqual(BRAND_ICON_PATH.read_bytes(), INTEGRATION_ICON_PATH.read_bytes())
 
     def test_custom_integration_uses_the_local_addon_hostname(self) -> None:
         constants = (ROOT / "custom_components" / "moonlight_voice" / "const.py").read_text(
