@@ -8,16 +8,19 @@ from hashlib import sha256
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from threading import Thread
 from typing import Dict, Optional, Tuple
 from urllib.parse import parse_qs, urlparse
 
 from .config import DEFAULT_AUDIO_DIR, SERVICE_VERSION, ServiceConfig
 from .responses import ResponseLibrary
+from .supervisor import publish_discovery
 from .web import get_static_dir, load_index_html, load_static_asset
 
 LOGGER = logging.getLogger("moonlight_voice.server")
 SENSITIVE_DEBUG_FIELDS = {"authorization", "cookie", "key", "password", "secret", "token"}
 DEBUG_BODY_LIMIT = 4_096
+INGRESS_PORT = 8031
 
 
 def _redact_debug_value(value):
@@ -911,6 +914,19 @@ class MoonlightVoiceServer(ThreadingHTTPServer):
         }
 
 
+class MoonlightVoiceIngressServer(ThreadingHTTPServer):
+    """Serve the same application state on the stable Supervisor Ingress port."""
+
+    allow_reuse_address = True
+
+    def __init__(self, server_address: Tuple[str, int], backend: MoonlightVoiceServer):
+        super().__init__(server_address, MoonlightVoiceRequestHandler)
+        self._backend = backend
+
+    def __getattr__(self, name: str):
+        return getattr(self._backend, name)
+
+
 def load_audio_files(
     config: ServiceConfig,
 ) -> Tuple[Dict[str, bytes], Dict[str, str], Path]:
@@ -964,9 +980,25 @@ def run_server(config: ServiceConfig) -> None:
         get_static_dir(),
     )
     LOGGER.info("Starting Moonlight Voice server on %s:%s", config.host, config.port)
+    ingress_server = None
+    ingress_thread = None
+    if config.port != INGRESS_PORT:
+        ingress_server = MoonlightVoiceIngressServer((config.host, INGRESS_PORT), server)
+        ingress_thread = Thread(
+            target=ingress_server.serve_forever,
+            name="moonlight-voice-ingress",
+            daemon=True,
+        )
+        ingress_thread.start()
+        LOGGER.info("Starting stable Ingress listener on %s:%s", config.host, INGRESS_PORT)
+
+    publish_discovery(config.port)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         LOGGER.info("Server interrupted, shutting down.")
     finally:
+        if ingress_server:
+            ingress_server.shutdown()
+            ingress_server.server_close()
         server.server_close()

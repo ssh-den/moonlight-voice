@@ -17,17 +17,17 @@ When a `/tts` request sends `text` or `input` equal to `doorbell` (ignoring surr
 
 ## Send a local test request
 
-The direct port is for your local network only. Do not expose its management API to the public internet.
+Direct HTTP access is disabled by default, so it cannot occupy host port `8031`. If needed, configure a host-port mapping in the add-on's **Network** settings to its internal port `8031`; use the host port you selected in the command below. Do not expose its management API to the public internet. The add-on's configurable `port` is a separate private backend port for the native Home Assistant integration and is discovered automatically by Supervisor.
 
 ```bash
 curl --request POST \
   --header 'Content-Type: application/json' \
   --data '{"text":"doorbell","format":"mp3"}' \
-  http://HOME_ASSISTANT_HOST:8031/tts \
+  http://HOME_ASSISTANT_HOST:HOST_PORT/tts \
   --output response.mp3
 ```
 
-Replace `HOME_ASSISTANT_HOST` with the local hostname or IP address of your Home Assistant system. The response is an audio stream, so the example writes it to `response.mp3`.
+Replace `HOME_ASSISTANT_HOST` and `HOST_PORT` with the local hostname/IP and the mapped host port. The response is an audio stream, so the example writes it to `response.mp3`.
 
 ## Back up audio
 
@@ -35,4 +35,4 @@ Audio, response-library files, and response metadata are stored in `/data/moonli
 
 See [API and security](api.md) for every supported endpoint and upload behavior.
 
-The **Service** tab is read-only status and configuration. **Advanced** shows the Ingress-relative management URLs, includes a safe read-only endpoint tester, and repeats the direct-port security boundary; it does not expose configurable routes or outbound proxying. Its request example starts with the hostname used to open the UI, and you can replace it with the local hostname or IP that reaches the direct port.
+The **Service** tab is read-only status and configuration. **Advanced** shows the Ingress-relative management URLs, includes a safe read-only endpoint tester, and distinguishes the discovered private integration port from the internal Ingress listener on `8031`; it does not expose configurable routes or outbound proxying. Its request example starts with the hostname used to open the UI, and you can replace it with the local hostname or IP that reaches a mapped host port.

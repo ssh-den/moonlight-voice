@@ -4,18 +4,32 @@ export function setupEndpointSettings({ api, notify }) {
   const select = byId("endpoint-test-select");
   const result = byId("endpoint-test-result");
   const directHost = byId("direct-host");
+  const directAddonUrl = byId("direct-addon-url");
   const requestExample = byId("request-example");
+  const ingressPort = 8031;
+  let backendPort = ingressPort;
   document.querySelectorAll("[data-effective-url]").forEach((element) => {
     const urlElement = /** @type {HTMLElement} */ (element);
     urlElement.textContent = api.endpoint(urlElement.dataset.effectiveUrl);
   });
   function renderRequestExample() {
     const host = directHost.value.trim() || "HOME_ASSISTANT_HOST";
-    requestExample.textContent = `curl --request POST --header 'Content-Type: application/json' --data '{"text":"doorbell","format":"mp3"}' http://${host}:8031/tts --output response.mp3`;
+    directAddonUrl.textContent = `Private add-on endpoint port: ${backendPort}`;
+    requestExample.textContent = `curl --request POST --header 'Content-Type: application/json' --data '{"text":"doorbell","format":"mp3"}' http://${host}:HOST_PORT/tts --output response.mp3`;
   }
   directHost.value = window.location.hostname || "HOME_ASSISTANT_HOST";
   directHost.addEventListener("input", renderRequestExample);
   renderRequestExample();
+  api
+    .getConfig()
+    .then((config) => {
+      const port = Number(config.port);
+      if (Number.isInteger(port) && port > 0 && port <= 65535) {
+        backendPort = port;
+        renderRequestExample();
+      }
+    })
+    .catch(() => undefined);
   byId("endpoint-test")?.addEventListener("click", async () => {
     const path = select?.value;
     const allowed = new Set([

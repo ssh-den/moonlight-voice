@@ -35,7 +35,7 @@
             <th scope="col">Endpoint</th>
             <th scope="col">Method</th>
             <th scope="col">Purpose</th>
-            <th scope="col">Active URL</th>
+            <th scope="col">Ingress URL (Web UI)</th>
           </tr>
         </thead>
         <tbody>
@@ -78,13 +78,20 @@
         </tbody>
       </table>
     </div>
+    <p class="form-help">
+      These URLs use Home Assistant Ingress and therefore normally include port
+      8123. They are for the authenticated Web UI, not for the native TTS
+      integration.
+    </p>
   </section>
 
   <section class="panel">
     <div class="panel__header">
       <div>
-        <h2>Test a read-only endpoint</h2>
-        <p>Only built-in read-only endpoints can be tested from this page.</p>
+        <h2>Test through Ingress</h2>
+        <p>
+          Only built-in read-only endpoints can be tested through this page.
+        </p>
       </div>
     </div>
     <div class="endpoint-tools">
@@ -113,10 +120,11 @@ Choose an endpoint to inspect its JSON response.</pre>
   <section class="panel">
     <div class="panel__header">
       <div>
-        <h2>Request example</h2>
+        <h2>Native integration backend</h2>
         <p>
-          We suggest the host you opened this UI from; change it if the local
-          direct port uses another hostname or IP.
+          Home Assistant Supervisor discovers this private add-on port
+          automatically. Ingress keeps a separate internal listener on port
+          8031.
         </p>
       </div>
       <button
@@ -138,10 +146,12 @@ Choose an endpoint to inspect its JSON response.</pre>
           placeholder="homeassistant.local"
         />
         <span class="form-help"
-          >Hostname or local IP; direct port defaults to 8031.</span
+          >Hostname or local IP; map a host port to internal port 8031 for
+          direct access.</span
         >
       </div>
     </div>
+    <pre class="code-block" id="direct-addon-url"></pre>
     <pre class="code-block" id="request-example"></pre>
   </section>
 </section>

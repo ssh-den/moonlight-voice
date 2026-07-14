@@ -12,6 +12,7 @@ if str(ROOT) not in sys.path:
 
 from moonlight_voice.config import ServiceConfig
 from moonlight_voice.server import (
+    MoonlightVoiceIngressServer,
     MoonlightVoiceServer,
     _describe_tts_payload,
     _format_debug_body,
@@ -24,6 +25,20 @@ WAV_BYTES = b"RIFF\x24\x00\x00\x00WAVEfmt "
 
 
 class ServerAudioLoadTest(unittest.TestCase):
+    def test_ingress_server_delegates_to_configured_backend(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            base = Path(tmpdir)
+            config = ServiceConfig(port=9000, output_file=str(base / "default.mp3"))
+            audio_cache, files, audio_dir = load_audio_files(config)
+            backend = MoonlightVoiceServer(("localhost", 0), config, audio_cache, files, audio_dir)
+            ingress = MoonlightVoiceIngressServer(("localhost", 0), backend)
+            try:
+                self.assertIs(ingress.config, backend.config)
+                self.assertEqual(ingress.describe_config()["port"], 9000)
+            finally:
+                ingress.server_close()
+                backend.server_close()
+
     def test_load_audio_files_supports_multiple_formats(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             base = Path(tmpdir)

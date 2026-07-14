@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from typing import Any
+from urllib.parse import urlsplit
 
 import voluptuous as vol
 from aiohttp import ClientError
@@ -20,6 +21,21 @@ class CannotConnectError(Exception):
 
 class TtsModeError(Exception):
     """Raised when the add-on has not enabled Home Assistant TTS mode."""
+
+
+def _default_endpoint(hass) -> str:
+    """Suggest the direct add-on URL from Home Assistant's internal URL."""
+    internal_url = getattr(hass.config, "internal_url", None)
+    if not isinstance(internal_url, str):
+        return DEFAULT_URL
+
+    hostname = urlsplit(internal_url).hostname
+    if not hostname:
+        return DEFAULT_URL
+
+    if ":" in hostname:
+        hostname = f"[{hostname}]"
+    return f"http://{hostname}:8031"
 
 
 async def _async_validate_endpoint(hass, endpoint: str) -> None:
@@ -56,7 +72,32 @@ class MoonlightVoiceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except TypeError, ValueError:
             return self.async_abort(reason="cannot_connect")
 
-        self._discovered_endpoint = f"http://{host}:{port}"
+        endpoint = f"http://{host}:{port}"
+        try:
+            await _async_validate_endpoint(self.hass, endpoint)
+        except CannotConnectError:
+            return self.async_abort(reason="cannot_connect")
+        except TtsModeError:
+            return self.async_abort(reason="home_assistant_mode_required")
+
+        existing_entries = self._async_current_entries()
+        if existing_entries:
+            entry = existing_entries[0]
+            unique_id = f"hassio:{discovery_info.slug}"
+            endpoint_changed = entry.data.get(CONF_URL) != endpoint
+            if endpoint_changed or entry.unique_id != unique_id:
+                self.hass.config_entries.async_update_entry(
+                    entry,
+                    data={CONF_URL: endpoint},
+                    unique_id=unique_id,
+                )
+            if endpoint_changed:
+                await self.hass.config_entries.async_reload(entry.entry_id)
+            return self.async_abort(reason="already_configured")
+
+        await self.async_set_unique_id(f"hassio:{discovery_info.slug}")
+        self._abort_if_unique_id_configured()
+        self._discovered_endpoint = endpoint
         return await self.async_step_user()
 
     async def async_step_user(
@@ -64,7 +105,7 @@ class MoonlightVoiceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> config_entries.ConfigFlowResult:
         """Handle the initial configuration step."""
         errors: dict[str, str] = {}
-        default_endpoint = self._discovered_endpoint or DEFAULT_URL
+        default_endpoint = self._discovered_endpoint or _default_endpoint(self.hass)
         if user_input is not None:
             endpoint = user_input[CONF_URL].strip().rstrip("/")
             default_endpoint = endpoint

@@ -12,6 +12,9 @@
       "cannot_connect": "Cannot connect to Moonlight Voice.",
       "home_assistant_mode_required": "Set the add-on TTS mode to Home Assistant TTS and restart the add-on.",
       "invalid_url": "Enter a valid HTTP or HTTPS URL."
+    },
+    "abort": {
+      "already_configured": "Moonlight Voice is already configured. Its endpoint was updated if needed."
     }
   }
 }

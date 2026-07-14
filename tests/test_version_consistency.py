@@ -74,10 +74,12 @@ class VersionConsistencyTest(unittest.TestCase):
         manifest = CONFIG_YAML_PATH.read_text(encoding="utf-8")
         self.assertIn("ingress: true", manifest)
         self.assertIn("ingress_port: 8031", manifest)
+        self.assertIn("8031/tcp: null", manifest)
 
-    def test_addon_manifest_advertises_the_custom_integration(self) -> None:
+    def test_addon_manifest_enables_supervisor_discovery(self) -> None:
         manifest = CONFIG_YAML_PATH.read_text(encoding="utf-8")
-        self.assertIn("discovery:\n  - moonlight_voice", manifest)
+        self.assertIn("hassio_api: true", manifest)
+        self.assertNotIn("discovery:\n", manifest)
 
     def test_addon_manifest_leaves_tts_settings_to_webui(self) -> None:
         manifest = CONFIG_YAML_PATH.read_text(encoding="utf-8")
@@ -87,6 +89,7 @@ class VersionConsistencyTest(unittest.TestCase):
     def test_custom_integration_manifest_matches_addon_version(self) -> None:
         manifest = INTEGRATION_MANIFEST_PATH.read_text(encoding="utf-8")
         self.assertIn('"config_flow": true', manifest)
+        self.assertIn('"single_config_entry": true', manifest)
         self.assertIn(f'"version": "{SERVICE_VERSION}"', manifest)
 
     def test_custom_integration_has_hacs_metadata(self) -> None:

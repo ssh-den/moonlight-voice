@@ -1,5 +1,5 @@
 name: Moonlight Voice
-version: 1.3.0
+version: 1.4.0
 slug: moonlight-voice
 description: Local deterministic audio-response service for Home Assistant, maintained by ssh-den
 arch:
@@ -10,11 +10,10 @@ startup: services
 boot: auto
 init: false
 ports:
-  8031/tcp: 8031
+  8031/tcp: null
 ingress: true
 ingress_port: 8031
-discovery:
-  - moonlight_voice
+hassio_api: true
 map:
   - config:rw
   - share:rw

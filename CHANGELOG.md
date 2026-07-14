@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.0
+
+- Prefilled the manual integration URL from Home Assistant's internal hostname on the add-on port.
+- Clarified the Web UI's Ingress URLs and direct add-on URL so port `8123` is not confused with port `8031`.
+
 ## 1.3.0
 
 - Added Home Assistant Supervisor discovery for the Moonlight Voice add-on, prefilling the integration's URL field with the discovered internal address.
