@@ -6,7 +6,7 @@ from pathlib import Path
 DEFAULT_OPTIONS_PATH = Path("/data/options.json")
 DEFAULT_AUDIO_DIR = Path("/data/moonlight-voice")
 DEFAULT_WEBUI_SETTINGS_PATH = DEFAULT_AUDIO_DIR / "settings.json"
-SERVICE_VERSION = "1.2.0"
+SERVICE_VERSION = "1.3.0"
 DEFAULT_MAX_UPLOAD_SIZE_MB = 20
 TTS_MODES = {"openai_compatible", "home_assistant"}
 WEBUI_SETTINGS_FIELDS = {"tts_mode", "output_format"}

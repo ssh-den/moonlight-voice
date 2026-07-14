@@ -34,7 +34,7 @@ Set `tts_mode` to `home_assistant` and restart the add-on. The native integratio
 2. Add `https://github.com/ssh-den/moonlight-voice` with category **Integration**.
 3. Find **Moonlight Voice** in HACS and select **Download**.
 4. Restart Home Assistant.
-5. Open **Settings → Devices & services → Add integration**, choose **Moonlight Voice**, and enter the add-on URL reachable from Home Assistant. For the locally deployed add-on, use `http://local-moonlight-voice:8031`.
+5. Under **Settings → Devices & services**, open the automatically discovered Moonlight Voice configuration form; its add-on URL is already filled in. If discovery is unavailable, choose **Add integration** and enter the add-on URL reachable from Home Assistant; for the locally deployed add-on, use `http://local-moonlight-voice:8031`.
 
 For a manual install, copy `custom_components/moonlight_voice` into `<Home Assistant config>/custom_components/moonlight_voice`, then restart Home Assistant. The integration automatically changes its Home Assistant TTS cache key after the response library changes. See [native TTS setup](docs/home-assistant-tts.md).
 

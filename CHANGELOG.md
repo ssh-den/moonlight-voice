@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.0
+
+- Added Home Assistant Supervisor discovery for the Moonlight Voice add-on, prefilling the integration's URL field with the discovered internal address.
+
 ## 1.2.0
 
 - Added the Moonlight Voice icon to the integration's local `brand/` directory so it is displayed by current Home Assistant and HACS installations.

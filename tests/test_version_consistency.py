@@ -31,6 +31,15 @@ def _read_addon_version() -> str:
     raise AssertionError("version not found in config.yaml")
 
 
+def _read_changelog_version() -> str:
+    first_release = next(
+        line
+        for line in ROOT_CHANGELOG_PATH.read_text(encoding="utf-8").splitlines()
+        if line.startswith("## ")
+    )
+    return first_release.removeprefix("## ").split(" ", 1)[0]
+
+
 def _source_icon_paths() -> list[str]:
     return re.findall(r'<path d="([^"]+)" />', SOURCE_ICON_PATH.read_text(encoding="utf-8"))
 
@@ -52,6 +61,9 @@ class VersionConsistencyTest(unittest.TestCase):
 
         self.assertEqual(addon_version, SERVICE_VERSION)
 
+    def test_changelog_version_matches_service_version(self) -> None:
+        self.assertEqual(_read_changelog_version(), SERVICE_VERSION)
+
     def test_github_and_addon_changelogs_are_identical(self) -> None:
         self.assertEqual(
             ROOT_CHANGELOG_PATH.read_text(encoding="utf-8"),
@@ -62,6 +74,10 @@ class VersionConsistencyTest(unittest.TestCase):
         manifest = CONFIG_YAML_PATH.read_text(encoding="utf-8")
         self.assertIn("ingress: true", manifest)
         self.assertIn("ingress_port: 8031", manifest)
+
+    def test_addon_manifest_advertises_the_custom_integration(self) -> None:
+        manifest = CONFIG_YAML_PATH.read_text(encoding="utf-8")
+        self.assertIn("discovery:\n  - moonlight_voice", manifest)
 
     def test_addon_manifest_leaves_tts_settings_to_webui(self) -> None:
         manifest = CONFIG_YAML_PATH.read_text(encoding="utf-8")
