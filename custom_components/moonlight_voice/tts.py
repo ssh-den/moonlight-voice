@@ -12,9 +12,10 @@ from homeassistant.components.tts import TextToSpeechEntity, TtsAudioType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import CONF_URL
+from .const import CONF_URL, DOMAIN
 
 LOGGER = logging.getLogger(__name__)
 SUPPORTED_LANGUAGES = ["ru", "en"]
@@ -45,6 +46,13 @@ class MoonlightVoiceTTSEntity(TextToSpeechEntity):
         """Initialize the entity from the configured endpoint."""
         self._endpoint = entry.data[CONF_URL]
         self._attr_unique_id = entry.entry_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.unique_id or entry.entry_id)},
+            name="Moonlight Voice",
+            manufacturer="Moonlight Voice",
+            model="Local audio response service",
+            entry_type=DeviceEntryType.SERVICE,
+        )
         self._cache_key = "unknown"
         self._cancel_cache_key_refresh = None
 

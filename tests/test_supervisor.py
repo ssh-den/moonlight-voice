@@ -3,13 +3,13 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 ROOT = Path(__file__).resolve().parents[1] / "moonlight-voice"
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from moonlight_voice.supervisor import publish_discovery
+from moonlight_voice.supervisor import _request_json, publish_discovery
 
 
 class SupervisorDiscoveryTest(unittest.TestCase):
@@ -41,6 +41,40 @@ class SupervisorDiscoveryTest(unittest.TestCase):
             self.assertEqual(
                 json.loads(state_path.read_text(encoding="utf-8")), {"uuid": "discovery-id"}
             )
+
+    @patch.dict("os.environ", {"SUPERVISOR_TOKEN": "token"})
+    @patch("moonlight_voice.supervisor._request_json")
+    def test_replaces_previous_discovery_before_publishing(self, request_json) -> None:
+        request_json.side_effect = [
+            {"ip_address": "172.30.33.8"},
+            {},
+            {"uuid": "new-discovery-id"},
+        ]
+        with tempfile.TemporaryDirectory() as tmpdir:
+            state_path = Path(tmpdir) / "discovery.json"
+            state_path.write_text(json.dumps({"uuid": "old-discovery-id"}), encoding="utf-8")
+
+            endpoint = publish_discovery(8031, state_path)
+
+            self.assertEqual(endpoint, "http://172.30.33.8:8031")
+            self.assertEqual(
+                request_json.call_args_list[1].args,
+                ("token", "/discovery/old-discovery-id"),
+            )
+            self.assertEqual(request_json.call_args_list[1].kwargs, {"method": "DELETE"})
+            self.assertEqual(request_json.call_args_list[2].args, ("token", "/discovery"))
+            self.assertEqual(
+                json.loads(state_path.read_text(encoding="utf-8")),
+                {"uuid": "new-discovery-id"},
+            )
+
+    @patch("moonlight_voice.supervisor.urlopen")
+    def test_accepts_supervisor_success_response_with_null_data(self, urlopen) -> None:
+        response = MagicMock()
+        response.read.return_value = b'{"result":"ok","data":null}'
+        urlopen.return_value.__enter__.return_value = response
+
+        self.assertEqual(_request_json("token", "/discovery/id", method="DELETE"), {})
 
     @patch.dict("os.environ", {}, clear=True)
     def test_skips_discovery_without_supervisor_token(self) -> None:

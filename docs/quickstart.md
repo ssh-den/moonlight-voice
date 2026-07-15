@@ -17,17 +17,17 @@ When a `/tts` request sends `text` or `input` equal to `doorbell` (ignoring surr
 
 ## Send a local test request
 
-Direct HTTP access is disabled by default, so it cannot occupy host port `8031`. If needed, configure a host-port mapping in the add-on's **Network** settings to its internal port `8031`; use the host port you selected in the command below. Do not expose its management API to the public internet. The add-on's configurable `port` is a separate private backend port for the native Home Assistant integration and is discovered automatically by Supervisor.
+Direct HTTP access uses host port `8031` by default. You can disable or remap it in the add-on's **Network** settings if the port is already occupied; use the effective host port in the command below. Do not expose its management API to the public internet. The add-on's configurable `port` is a separate private backend port for the native Home Assistant integration and is discovered automatically through the Supervisor network.
 
 ```bash
 curl --request POST \
   --header 'Content-Type: application/json' \
   --data '{"text":"doorbell","format":"mp3"}' \
-  http://HOME_ASSISTANT_HOST:HOST_PORT/tts \
+  http://HOME_ASSISTANT_HOST:8031/tts \
   --output response.mp3
 ```
 
-Replace `HOME_ASSISTANT_HOST` and `HOST_PORT` with the local hostname/IP and the mapped host port. The response is an audio stream, so the example writes it to `response.mp3`.
+Replace `HOME_ASSISTANT_HOST` with the local hostname or IP. If you remapped port `8031`, use the selected host port instead. The response is an audio stream, so the example writes it to `response.mp3`.
 
 ## Back up audio
 

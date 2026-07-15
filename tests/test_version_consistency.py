@@ -10,6 +10,9 @@ ROOT_CHANGELOG_PATH = ROOT / "CHANGELOG.md"
 ADDON_CHANGELOG_PATH = ADDON_ROOT / "CHANGELOG.md"
 CONFIG_YAML_PATH = ADDON_ROOT / "config.yaml"
 INTEGRATION_MANIFEST_PATH = ROOT / "custom_components" / "moonlight_voice" / "manifest.json"
+CONFIG_FLOW_PATH = INTEGRATION_MANIFEST_PATH.parent / "config_flow.py"
+TTS_PLATFORM_PATH = INTEGRATION_MANIFEST_PATH.parent / "tts.py"
+SUPERVISOR_SOURCE_PATH = ADDON_ROOT / "moonlight_voice" / "supervisor.py"
 HACS_MANIFEST_PATH = ROOT / "hacs.json"
 BRAND_ICON_PATH = ROOT / "brand" / "icon.png"
 INTEGRATION_ICON_PATH = INTEGRATION_MANIFEST_PATH.parent / "brand" / "icon.png"
@@ -74,12 +77,16 @@ class VersionConsistencyTest(unittest.TestCase):
         manifest = CONFIG_YAML_PATH.read_text(encoding="utf-8")
         self.assertIn("ingress: true", manifest)
         self.assertIn("ingress_port: 8031", manifest)
-        self.assertIn("8031/tcp: null", manifest)
+        self.assertIn("8031/tcp: 8031", manifest)
 
     def test_addon_manifest_enables_supervisor_discovery(self) -> None:
         manifest = CONFIG_YAML_PATH.read_text(encoding="utf-8")
         self.assertIn("hassio_api: true", manifest)
-        self.assertNotIn("discovery:\n", manifest)
+        self.assertIn("discovery:\n  - moonlight_voice", manifest)
+
+        publisher = SUPERVISOR_SOURCE_PATH.read_text(encoding="utf-8")
+        self.assertIn('DISCOVERY_SERVICE = "moonlight_voice"', publisher)
+        self.assertIn('"service": DISCOVERY_SERVICE', publisher)
 
     def test_addon_manifest_leaves_tts_settings_to_webui(self) -> None:
         manifest = CONFIG_YAML_PATH.read_text(encoding="utf-8")
@@ -111,6 +118,17 @@ class VersionConsistencyTest(unittest.TestCase):
             encoding="utf-8"
         )
         self.assertIn('DEFAULT_URL = "http://local-moonlight-voice:8031"', constants)
+
+    def test_discovery_flow_preserves_the_supervisor_unique_id(self) -> None:
+        config_flow = CONFIG_FLOW_PATH.read_text(encoding="utf-8")
+        self.assertIn("async def async_step_hassio", config_flow)
+        self.assertIn('self._discovered_unique_id = f"hassio:{discovery_info.slug}"', config_flow)
+        self.assertIn("self._discovered_unique_id or endpoint", config_flow)
+
+    def test_custom_integration_registers_a_service_device(self) -> None:
+        tts_platform = TTS_PLATFORM_PATH.read_text(encoding="utf-8")
+        self.assertIn("DeviceInfo(", tts_platform)
+        self.assertIn("entry_type=DeviceEntryType.SERVICE", tts_platform)
 
 
 if __name__ == "__main__":

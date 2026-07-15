@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.1
+
+- Restored the default host mapping for port `8031` so direct local URLs work after installation.
+- Restored the Supervisor discovery service allow-list required for the add-on to publish its private endpoint.
+- Kept discovered flows visible until the user confirms connectivity and Home Assistant TTS mode, while preserving a stable Supervisor unique ID.
+- Registered the Moonlight Voice TTS provider as a Home Assistant service device.
+
 ## 1.4.0
 
 - Prefilled the manual integration URL from Home Assistant's internal hostname on the add-on port.

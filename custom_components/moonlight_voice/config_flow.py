@@ -57,6 +57,7 @@ class MoonlightVoiceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     _discovered_endpoint: str | None = None
+    _discovered_unique_id: str | None = None
 
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
@@ -73,13 +74,6 @@ class MoonlightVoiceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
 
         endpoint = f"http://{host}:{port}"
-        try:
-            await _async_validate_endpoint(self.hass, endpoint)
-        except CannotConnectError:
-            return self.async_abort(reason="cannot_connect")
-        except TtsModeError:
-            return self.async_abort(reason="home_assistant_mode_required")
-
         existing_entries = self._async_current_entries()
         if existing_entries:
             entry = existing_entries[0]
@@ -95,7 +89,8 @@ class MoonlightVoiceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.hass.config_entries.async_reload(entry.entry_id)
             return self.async_abort(reason="already_configured")
 
-        await self.async_set_unique_id(f"hassio:{discovery_info.slug}")
+        self._discovered_unique_id = f"hassio:{discovery_info.slug}"
+        await self.async_set_unique_id(self._discovered_unique_id)
         self._abort_if_unique_id_configured()
         self._discovered_endpoint = endpoint
         return await self.async_step_user()
@@ -119,7 +114,7 @@ class MoonlightVoiceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 except TtsModeError:
                     errors["base"] = "home_assistant_mode_required"
                 else:
-                    await self.async_set_unique_id(endpoint)
+                    await self.async_set_unique_id(self._discovered_unique_id or endpoint)
                     self._abort_if_unique_id_configured()
                     return self.async_create_entry(
                         title="Moonlight Voice", data={CONF_URL: endpoint}

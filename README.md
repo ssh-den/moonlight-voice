@@ -20,13 +20,13 @@ For the complete first-run path, request examples, backup guidance, and direct-p
 
 ### OpenAI-compatible TTS endpoint
 
-This is the default add-on mode: set `tts_mode` to `openai_compatible`. Configure an HTTP client that supports OpenAI-style TTS fields to send requests to the host port you explicitly map to the add-on's internal port `8031`; use `input` (or `text`) for the requested response code and optionally `format` (`mp3` or `wav`). The matching saved clip is returned; an unmatched code returns the default clip.
+This is the default add-on mode: set `tts_mode` to `openai_compatible`. Configure an HTTP client that supports OpenAI-style TTS fields to send requests to `http://HOME_ASSISTANT_HOST:8031/tts`; use `input` (or `text`) for the requested response code and optionally `format` (`mp3` or `wav`). The matching saved clip is returned; an unmatched code returns the default clip. Port `8031` is mapped to the Home Assistant host by default and can be disabled or remapped in the add-on's **Network** settings.
 
 Moonlight Voice supports these OpenAI-style request fields but is not a full OpenAI API implementation: it exposes `/tts`, not `/v1/audio/speech`. Use this mode when the calling application can be pointed at a custom TTS endpoint.
 
 ### Moonlight Voice integration
 
-Set `tts_mode` to `home_assistant` and restart the add-on. The native integration registers a Home Assistant TTS entity, so it can be selected in an Assist pipeline or used with `tts.speak`. Every spoken message is sent to `/tts` as `message`, then matched against saved response codes.
+In the Moonlight Voice Web UI, set `tts_mode` to `home_assistant`. The native integration registers a Home Assistant TTS entity and a service device, so it can be selected in an Assist pipeline or used with `tts.speak`. Every spoken message is sent to `/tts` as `message`, then matched against saved response codes.
 
 #### Install the integration through HACS
 
@@ -34,7 +34,7 @@ Set `tts_mode` to `home_assistant` and restart the add-on. The native integratio
 2. Add `https://github.com/ssh-den/moonlight-voice` with category **Integration**.
 3. Find **Moonlight Voice** in HACS and select **Download**.
 4. Restart Home Assistant.
-5. Under **Settings → Devices & services**, open the automatically discovered Moonlight Voice configuration form. The add-on publishes its private Docker IP and the configured add-on `port` to Supervisor Discovery; an existing integration entry is updated and reloaded after an add-on restart if that port changes.
+5. Under **Settings → Devices & services**, open the automatically discovered Moonlight Voice configuration form. The add-on publishes its private Docker IP and the configured add-on `port` to Supervisor Discovery; an existing integration entry is updated and reloaded after an add-on restart if that port changes. Discovery uses the private Supervisor network and does not depend on the host-port mapping.
 
    If discovery is unavailable, choose **Add integration** and enter an endpoint reachable from Home Assistant. For the locally deployed add-on, the fallback is `http://local-moonlight-voice:8031`.
 

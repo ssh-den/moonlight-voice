@@ -29,10 +29,15 @@ def _request_json(token: str, path: str, method: str = "GET", payload: dict | No
         },
     )
     with urlopen(request, timeout=5) as response:  # noqa: S310 - fixed Supervisor URL
-        decoded = json.loads(response.read().decode("utf-8"))
+        raw_response = response.read()
+    if not raw_response:
+        return {}
+    decoded = json.loads(raw_response.decode("utf-8"))
     if not isinstance(decoded, dict):
         raise ValueError("Supervisor returned a non-object response")
     data = decoded.get("data", decoded)
+    if data is None:
+        return {}
     if not isinstance(data, dict):
         raise ValueError("Supervisor response data is not an object")
     return data
@@ -45,6 +50,27 @@ def _read_previous_discovery_id(state_path: Path) -> str | None:
         return None
     discovery_id = payload.get("uuid") if isinstance(payload, dict) else None
     return discovery_id if isinstance(discovery_id, str) and discovery_id else None
+
+
+def _delete_previous_discovery(token: str, state_path: Path) -> None:
+    discovery_id = _read_previous_discovery_id(state_path)
+    if not discovery_id:
+        return
+
+    try:
+        _request_json(token, f"/discovery/{discovery_id}", method="DELETE")
+    except HTTPError as err:
+        if err.code != 404:
+            raise
+        LOGGER.debug("Previous discovery %s was already removed", discovery_id)
+    state_path.unlink(missing_ok=True)
+
+
+def _write_discovery_id(state_path: Path, discovery_id: str) -> None:
+    state_path.parent.mkdir(parents=True, exist_ok=True)
+    temporary_path = state_path.with_name(f".{state_path.name}.tmp")
+    temporary_path.write_text(json.dumps({"uuid": discovery_id}) + "\n", encoding="utf-8")
+    temporary_path.replace(state_path)
 
 
 def publish_discovery(port: int, state_path: Path = DISCOVERY_STATE_PATH) -> str | None:
@@ -60,12 +86,7 @@ def publish_discovery(port: int, state_path: Path = DISCOVERY_STATE_PATH) -> str
         if not isinstance(host, str) or not host:
             raise ValueError("Supervisor did not provide an add-on IP address")
 
-        previous_id = _read_previous_discovery_id(state_path)
-        if previous_id:
-            try:
-                _request_json(token, f"/discovery/{previous_id}", method="DELETE")
-            except HTTPError, URLError, OSError, ValueError, json.JSONDecodeError:
-                LOGGER.debug("Previous discovery %s could not be removed", previous_id)
+        _delete_previous_discovery(token, state_path)
 
         discovery = _request_json(
             token,
@@ -80,8 +101,7 @@ def publish_discovery(port: int, state_path: Path = DISCOVERY_STATE_PATH) -> str
         if not isinstance(discovery_id, str) or not discovery_id:
             raise ValueError("Supervisor did not return a discovery UUID")
 
-        state_path.parent.mkdir(parents=True, exist_ok=True)
-        state_path.write_text(json.dumps({"uuid": discovery_id}) + "\n", encoding="utf-8")
+        _write_discovery_id(state_path, discovery_id)
         endpoint = f"http://{host}:{port}"
         LOGGER.info("Published Moonlight Voice discovery endpoint %s", endpoint)
         return endpoint
