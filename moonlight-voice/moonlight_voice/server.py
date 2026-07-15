@@ -14,7 +14,7 @@ from urllib.parse import parse_qs, urlparse
 
 from .config import DEFAULT_AUDIO_DIR, SERVICE_VERSION, ServiceConfig
 from .responses import ResponseLibrary
-from .supervisor import publish_discovery
+from .supervisor import publish_discovery_with_retry
 from .web import get_static_dir, load_index_html, load_static_asset
 
 LOGGER = logging.getLogger("moonlight_voice.server")
@@ -992,7 +992,13 @@ def run_server(config: ServiceConfig) -> None:
         ingress_thread.start()
         LOGGER.info("Starting stable Ingress listener on %s:%s", config.host, INGRESS_PORT)
 
-    publish_discovery(config.port)
+    discovery_thread = Thread(
+        target=publish_discovery_with_retry,
+        args=(config.port,),
+        name="moonlight-voice-discovery",
+        daemon=True,
+    )
+    discovery_thread.start()
     try:
         server.serve_forever()
     except KeyboardInterrupt:

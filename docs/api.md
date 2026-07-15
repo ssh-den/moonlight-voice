@@ -13,7 +13,7 @@ Moonlight Voice serves local HTTP endpoints. The Home Assistant **Open Web UI** 
 - A non-empty response code matches when the normalized request text is identical: surrounding whitespace is removed and comparison is case-insensitive.
 - If a response code matches but its requested format is unavailable, its other available format is returned before falling back to the default clip. If no response code matches, the configured default clip is returned. If neither requested nor fallback audio is available, the service returns `500` JSON with an `error` field.
 
-The add-on option `tts_mode` selects the primary client: `openai_compatible` is the default for the existing `input`/`text` shim, while `home_assistant` enables the native integration. Both payload forms remain accepted so changing the mode does not break a previously configured endpoint.
+The Web UI setting `tts_mode` selects the primary client: `home_assistant` is the default for the native integration, while `openai_compatible` enables the existing `input`/`text` shim. Both payload forms remain accepted so changing the mode does not break a previously configured endpoint.
 
 ```bash
 curl --request POST \

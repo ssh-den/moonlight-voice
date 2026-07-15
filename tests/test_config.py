@@ -17,7 +17,7 @@ class ServiceConfigTest(unittest.TestCase):
             cfg = ServiceConfig.load(options_path=Path(tmpdir) / "missing.json")
             cfg.normalize()
             self.assertEqual(cfg.output_format, "mp3")
-            self.assertEqual(cfg.tts_mode, "openai_compatible")
+            self.assertEqual(cfg.tts_mode, "home_assistant")
             self.assertEqual(cfg.log_level, "info")
             self.assertEqual(cfg.resolved_audio_path().parent, DEFAULT_AUDIO_DIR)
 
@@ -57,7 +57,7 @@ class ServiceConfigTest(unittest.TestCase):
     def test_normalizes_unknown_tts_mode(self) -> None:
         cfg = ServiceConfig(tts_mode="unsupported")
         cfg.normalize()
-        self.assertEqual(cfg.tts_mode, "openai_compatible")
+        self.assertEqual(cfg.tts_mode, "home_assistant")
 
     def test_webui_settings_override_addon_options_and_persist(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

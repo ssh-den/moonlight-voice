@@ -20,13 +20,13 @@ For the complete first-run path, request examples, backup guidance, and direct-p
 
 ### OpenAI-compatible TTS endpoint
 
-This is the default add-on mode: set `tts_mode` to `openai_compatible`. Configure an HTTP client that supports OpenAI-style TTS fields to send requests to `http://HOME_ASSISTANT_HOST:8031/tts`; use `input` (or `text`) for the requested response code and optionally `format` (`mp3` or `wav`). The matching saved clip is returned; an unmatched code returns the default clip. Port `8031` is mapped to the Home Assistant host by default and can be disabled or remapped in the add-on's **Network** settings.
+Set `tts_mode` to `openai_compatible` to use this optional mode. Configure an HTTP client that supports OpenAI-style TTS fields to send requests to `http://HOME_ASSISTANT_HOST:8031/tts`; use `input` (or `text`) for the requested response code and optionally `format` (`mp3` or `wav`). The matching saved clip is returned; an unmatched code returns the default clip. Port `8031` is mapped to the Home Assistant host by default and can be disabled or remapped in the add-on's **Network** settings.
 
 Moonlight Voice supports these OpenAI-style request fields but is not a full OpenAI API implementation: it exposes `/tts`, not `/v1/audio/speech`. Use this mode when the calling application can be pointed at a custom TTS endpoint.
 
 ### Moonlight Voice integration
 
-In the Moonlight Voice Web UI, set `tts_mode` to `home_assistant`. The native integration registers a Home Assistant TTS entity and a service device, so it can be selected in an Assist pipeline or used with `tts.speak`. Every spoken message is sent to `/tts` as `message`, then matched against saved response codes.
+This is the default mode for a new installation. The native integration registers a Home Assistant TTS entity and a service device, so it can be selected in an Assist pipeline or used with `tts.speak`. Every spoken message is sent to `/tts` as `message`, then matched against saved response codes. Existing Web UI settings are preserved during upgrades.
 
 #### Install the integration through HACS
 

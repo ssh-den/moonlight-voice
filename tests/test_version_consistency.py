@@ -13,6 +13,7 @@ INTEGRATION_MANIFEST_PATH = ROOT / "custom_components" / "moonlight_voice" / "ma
 CONFIG_FLOW_PATH = INTEGRATION_MANIFEST_PATH.parent / "config_flow.py"
 TTS_PLATFORM_PATH = INTEGRATION_MANIFEST_PATH.parent / "tts.py"
 SUPERVISOR_SOURCE_PATH = ADDON_ROOT / "moonlight_voice" / "supervisor.py"
+SERVICE_RUN_PATH = ADDON_ROOT / "rootfs" / "etc" / "services.d" / "moonlight-voice" / "run"
 HACS_MANIFEST_PATH = ROOT / "hacs.json"
 BRAND_ICON_PATH = ROOT / "brand" / "icon.png"
 INTEGRATION_ICON_PATH = INTEGRATION_MANIFEST_PATH.parent / "brand" / "icon.png"
@@ -87,6 +88,12 @@ class VersionConsistencyTest(unittest.TestCase):
         publisher = SUPERVISOR_SOURCE_PATH.read_text(encoding="utf-8")
         self.assertIn('DISCOVERY_SERVICE = "moonlight_voice"', publisher)
         self.assertIn('"service": DISCOVERY_SERVICE', publisher)
+
+        service_run = SERVICE_RUN_PATH.read_text(encoding="utf-8")
+        self.assertTrue(service_run.startswith("#!/usr/bin/with-contenv bash\n"))
+
+        server = (ADDON_ROOT / "moonlight_voice" / "server.py").read_text(encoding="utf-8")
+        self.assertIn("target=publish_discovery_with_retry", server)
 
     def test_addon_manifest_leaves_tts_settings_to_webui(self) -> None:
         manifest = CONFIG_YAML_PATH.read_text(encoding="utf-8")

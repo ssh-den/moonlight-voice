@@ -6,8 +6,9 @@ from pathlib import Path
 DEFAULT_OPTIONS_PATH = Path("/data/options.json")
 DEFAULT_AUDIO_DIR = Path("/data/moonlight-voice")
 DEFAULT_WEBUI_SETTINGS_PATH = DEFAULT_AUDIO_DIR / "settings.json"
-SERVICE_VERSION = "1.4.1"
+SERVICE_VERSION = "1.4.2"
 DEFAULT_MAX_UPLOAD_SIZE_MB = 20
+DEFAULT_TTS_MODE = "home_assistant"
 TTS_MODES = {"openai_compatible", "home_assistant"}
 WEBUI_SETTINGS_FIELDS = {"tts_mode", "output_format"}
 LOGGER = logging.getLogger("moonlight_voice.config")
@@ -17,7 +18,7 @@ LOGGER = logging.getLogger("moonlight_voice.config")
 class ServiceConfig:
     host: str = "0.0.0.0"
     port: int = 8031
-    tts_mode: str = "openai_compatible"
+    tts_mode: str = DEFAULT_TTS_MODE
     output_format: str = "mp3"
     output_file: str = str(DEFAULT_AUDIO_DIR / "default.mp3")
     log_level: str = "info"
@@ -137,7 +138,7 @@ class ServiceConfig:
         if self.output_format not in {"mp3", "wav"}:
             self.output_format = "mp3"
         if self.tts_mode not in TTS_MODES:
-            self.tts_mode = "openai_compatible"
+            self.tts_mode = DEFAULT_TTS_MODE
         if self.log_level not in {"debug", "info", "warn", "warning", "error"}:
             self.log_level = "info"
         if self.log_level == "warning":

@@ -23,7 +23,7 @@ export function setupServiceOverview({ state, api, dialogs, notify, refresh }) {
 
   function renderTtsSettings(config) {
     if (!config || settingsForm?.dataset.dirty === "true") return;
-    ttsMode.value = config.tts_mode || "openai_compatible";
+    ttsMode.value = config.tts_mode || "home_assistant";
     outputFormat.value = config.output_format || "mp3";
   }
 

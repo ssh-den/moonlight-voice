@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.2
+
+- Preserved the Supervisor token in the s6 service environment so automatic integration discovery is actually published.
+- Retried discovery publication in the background until Supervisor accepts it, without delaying the HTTP service startup.
+- Made Home Assistant TTS the default mode for new installations while preserving explicit saved settings.
+
 ## 1.4.1
 
 - Restored the default host mapping for port `8031` so direct local URLs work after installation.

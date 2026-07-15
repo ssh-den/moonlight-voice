@@ -3,13 +3,17 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 ROOT = Path(__file__).resolve().parents[1] / "moonlight-voice"
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from moonlight_voice.supervisor import _request_json, publish_discovery
+from moonlight_voice.supervisor import (
+    _request_json,
+    publish_discovery,
+    publish_discovery_with_retry,
+)
 
 
 class SupervisorDiscoveryTest(unittest.TestCase):
@@ -79,3 +83,18 @@ class SupervisorDiscoveryTest(unittest.TestCase):
     @patch.dict("os.environ", {}, clear=True)
     def test_skips_discovery_without_supervisor_token(self) -> None:
         self.assertIsNone(publish_discovery(8031))
+
+    @patch("moonlight_voice.supervisor.publish_discovery")
+    def test_retries_discovery_until_supervisor_accepts_it(self, publish) -> None:
+        publish.side_effect = [None, None, "http://172.30.33.9:8031"]
+        sleep = MagicMock()
+
+        endpoint = publish_discovery_with_retry(
+            8031,
+            retry_delays=(1.0, 2.0, 5.0),
+            sleep=sleep,
+        )
+
+        self.assertEqual(endpoint, "http://172.30.33.9:8031")
+        self.assertEqual(publish.call_count, 3)
+        self.assertEqual(sleep.call_args_list, [call(1.0), call(2.0)])

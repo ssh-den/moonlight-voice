@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 import logging
 import os
+import time
+from collections.abc import Callable
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -15,6 +17,7 @@ LOGGER = logging.getLogger("moonlight_voice.supervisor")
 DISCOVERY_SERVICE = "moonlight_voice"
 DISCOVERY_STATE_PATH = DEFAULT_AUDIO_DIR / "supervisor-discovery.json"
 SUPERVISOR_URL = "http://supervisor"
+DISCOVERY_RETRY_DELAYS = (1.0, 2.0, 5.0, 10.0, 30.0, 60.0)
 
 
 def _request_json(token: str, path: str, method: str = "GET", payload: dict | None = None) -> dict:
@@ -108,3 +111,23 @@ def publish_discovery(port: int, state_path: Path = DISCOVERY_STATE_PATH) -> str
     except (HTTPError, URLError, OSError, ValueError, json.JSONDecodeError) as err:
         LOGGER.warning("Could not publish Moonlight Voice discovery: %s", err)
         return None
+
+
+def publish_discovery_with_retry(
+    port: int,
+    state_path: Path = DISCOVERY_STATE_PATH,
+    retry_delays: tuple[float, ...] = DISCOVERY_RETRY_DELAYS,
+    sleep: Callable[[float], None] = time.sleep,
+) -> str:
+    """Publish discovery, retrying until Supervisor accepts it."""
+    delays = retry_delays or (60.0,)
+    attempt = 0
+    while True:
+        endpoint = publish_discovery(port, state_path)
+        if endpoint is not None:
+            return endpoint
+
+        delay = delays[min(attempt, len(delays) - 1)]
+        LOGGER.info("Supervisor discovery is unavailable; retrying in %.0f seconds", delay)
+        sleep(delay)
+        attempt += 1

@@ -4,10 +4,10 @@ Moonlight Voice can appear in Home Assistant as a TTS provider. It does not synt
 
 ## Set up
 
-1. In the Moonlight Voice Web UI, set `tts_mode` to `home_assistant`.
+1. Keep the default `home_assistant` TTS mode in the Moonlight Voice Web UI. Existing installations that explicitly selected another mode keep their saved setting.
 2. Install `custom_components/moonlight_voice` from this repository into `<Home Assistant config>/custom_components/moonlight_voice`, or install the repository through HACS as an integration.
 3. Restart Home Assistant after installing the custom integration.
-4. The Supervisor discovers the running Moonlight Voice add-on and opens its configuration form under **Settings → Devices & services** with the add-on's private Docker IP and configured `port` already filled in. When the add-on restarts after a port change, it republishes the endpoint; an existing Moonlight Voice integration entry is updated and reloaded automatically.
+4. The Supervisor discovers the running Moonlight Voice add-on and opens its configuration form under **Settings → Devices & services** with the add-on's private Docker IP and configured `port` already filled in. Discovery publication retries in the background until Supervisor accepts it. When the add-on restarts after a port change, it republishes the endpoint; an existing Moonlight Voice integration entry is updated and reloaded automatically.
 
    If discovery is not available (for example, Home Assistant Container or Core without the Supervisor), go to **Settings → Devices & services → Add integration** and choose **Moonlight Voice**. Enter an endpoint that Home Assistant can reach. For this repository deployed through the local `addons` share, the fallback is `http://local-moonlight-voice:8031`.
 

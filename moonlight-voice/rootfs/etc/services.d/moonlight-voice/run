@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/with-contenv bash
 set -euo pipefail
 
 echo "[moonlight-voice] s6 service wrapper starting at $(date -Is)"
